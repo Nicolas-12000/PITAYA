@@ -8,7 +8,7 @@
 
 ## Alcance
 
-**Solo backend** (API FastAPI + pipeline CRISP-DM offline). UI fuera de alcance en esta fase.
+**Desarrollo activo: backend** (API FastAPI + pipeline CRISP-DM offline). `frontend/` contiene solo documentación guía para la UI futura.
 
 | Capa | Tecnología |
 |------|------------|
@@ -56,6 +56,7 @@ backend/src/pitaya/
   orchestration/    # workflows
   platform/         # web, storage, cache
 docs/crisp-dm/      # fases y entregables
+frontend/           # guía UI (README + ROUTES; sin app Next.js)
 notebooks/          # EDA (fuera del runtime de serving)
 ```
 
