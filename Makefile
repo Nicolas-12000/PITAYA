@@ -1,4 +1,4 @@
-.PHONY: help install sync lint format typecheck test backend-dev train ingest verify-idempotent crisp-dm check-python-clean
+.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev train ingest verify-idempotent crisp-dm check-python-clean
 
 BACKEND := backend
 UV := cd $(BACKEND) && uv
@@ -13,6 +13,8 @@ help:
 	@echo "  make typecheck          mypy src"
 	@echo "  make test               pytest"
 	@echo "  make backend-dev        uvicorn con reload (puerto 8000)"
+	@echo "  make frontend-install   pnpm install en frontend/"
+	@echo "  make frontend-dev       next dev (puerto 3000)"
 	@echo ""
 	@echo "  CRISP-DM / datos:"
 	@echo "  make ingest             Descargar/validar dataset → snapshot"
@@ -38,6 +40,12 @@ test:
 
 backend-dev:
 	cd $(BACKEND) && uv run uvicorn app.index:app --reload --port 8000
+
+frontend-install:
+	cd frontend && pnpm install --frozen-lockfile
+
+frontend-dev:
+	cd frontend && pnpm dev
 
 check-python-clean:
 	@! python3 -c "import fastapi" 2>/dev/null && echo "[check-python-clean] OK: fastapi no está en el Python del sistema" || (echo "[check-python-clean] FAIL: fastapi importable fuera del venv" >&2; exit 1)

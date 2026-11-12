@@ -8,7 +8,7 @@
 
 ## Alcance
 
-**Desarrollo activo: backend** (API FastAPI + pipeline CRISP-DM offline). `frontend/` contiene solo documentación guía para la UI futura.
+**Desarrollo activo: backend**. `frontend/` es el scaffold oficial de Next.js (`create-next-app`) más guía en `ROUTES.md` — sin UI de dashboard aún.
 
 | Capa | Tecnología |
 |------|------------|
@@ -30,6 +30,11 @@ make install
 make backend-dev
 # → http://localhost:8000/v1/health
 # → http://localhost:8000/docs
+
+# Frontend (base Next, opcional)
+make frontend-install
+make frontend-dev
+# → http://localhost:3000
 ```
 
 Variables opcionales (copiar desde `.env.example`):
@@ -56,7 +61,7 @@ backend/src/pitaya/
   orchestration/    # workflows
   platform/         # web, storage, cache
 docs/crisp-dm/      # fases y entregables
-frontend/           # guía UI (README + ROUTES; sin app Next.js)
+frontend/           # Next.js (create-next-app) + ROUTES.md guía
 notebooks/          # EDA (fuera del runtime de serving)
 ```
 

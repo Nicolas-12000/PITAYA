@@ -3,7 +3,7 @@
 ## Stack
 - Backend únicamente: Python 3.12, FastAPI, Pydantic y uv.
 - **Python solo en venv:** `backend/.venv` vía `uv sync` / `uv run`. Prohibido `pip install` en el intérprete del sistema o `--user`.
-- `frontend/` es **solo guía** (README + mapa de rutas). No scaffoldear ni modificar Next.js sin petición explícita.
+- `frontend/`: base **create-next-app** (Next.js oficial) + `GUIDE.md` / `ROUTES.md`. Sin lógica analítica ni pantallas de dashboard hasta nueva petición.
 - Comunicación mediante API JSON documentada con OpenAPI.
 - No introducir servicios externos obligatorios.
 

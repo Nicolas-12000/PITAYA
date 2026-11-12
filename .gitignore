@@ -25,6 +25,12 @@ backend/snapshot/ads.csv
 backend/snapshot/ads.csv.gz
 backend/snapshot/models/*.joblib
 
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
 # IDE / OS
 .idea/
 .vscode/
