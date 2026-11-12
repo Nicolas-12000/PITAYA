@@ -1,8 +1,8 @@
 """sklearn Pipelines — fit only on training data in the training CLI."""
 
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -78,11 +78,7 @@ def build_estimator(kind: ModelKind, random_seed: int) -> object:
             n_jobs=-1,
         )
     if kind == ModelKind.ADABOOST:
-        return AdaBoostClassifier(
-            n_estimators=100,
-            random_state=random_seed,
-            algorithm="SAMME",
-        )
+        return AdaBoostClassifier(n_estimators=100, random_state=random_seed)
     raise ValueError(f"Unknown model kind: {kind}")
 
 

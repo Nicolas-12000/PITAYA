@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from pitaya.kernel.errors import SnapshotNotFoundError
-from pitaya.orchestration.workflows import kpis, status
+from pitaya.orchestration.workflows import ab_test, kpis, predict, segments, status
 from pitaya.platform.web.schemas import (
+    AbTestRequest,
+    AbTestResponse,
     HealthResponse,
     KpisResponse,
     PredictRequest,
     PredictResponse,
+    SegmentsResponse,
     StatusResponse,
 )
 
@@ -34,41 +37,54 @@ def get_kpis() -> KpisResponse:
     return KpisResponse(**payload)
 
 
+@router.get("/segments", response_model=SegmentsResponse)
+def get_segments() -> SegmentsResponse:
+    try:
+        payload = segments.get_segments_workflow()
+    except SnapshotNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return SegmentsResponse(**payload)
+
+
+@router.get("/channels/compare")
+def compare_channels() -> dict[str, object]:
+    try:
+        return segments.get_channel_compare_workflow()
+    except SnapshotNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
 @router.post("/predict", response_model=PredictResponse)
-def predict(body: PredictRequest) -> PredictResponse:
-    return PredictResponse(
-        status="not_implemented",
-        message="Load trained artifacts from snapshot/models on first implementation pass.",
-        predictions=None,
-    )
+def post_predict(body: PredictRequest) -> PredictResponse:
+    try:
+        payload = predict.predict_workflow(body.records, body.model_kind, body.scenario)
+    except SnapshotNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return PredictResponse(**payload)
 
 
-@router.get("/segments")
-def get_segments() -> dict[str, str]:
-    return {"status": "not_implemented"}
-
-
-@router.post("/ab-test")
-def post_ab_test() -> dict[str, str]:
-    return {"status": "not_implemented"}
+@router.post("/ab-test", response_model=AbTestResponse)
+def post_ab_test(body: AbTestRequest) -> AbTestResponse:
+    try:
+        payload = ab_test.ab_test_workflow(body.campaign_ids)
+    except SnapshotNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return AbTestResponse(**payload)
 
 
 @router.get("/attribution")
 def get_attribution(model: str = "shapley") -> dict[str, str]:
-    return {"status": "not_implemented", "model": model}
-
-
-@router.get("/channels/compare")
-def compare_channels() -> dict[str, str]:
-    return {"status": "not_implemented"}
+    return {"status": "planned", "model": model, "level": "A"}
 
 
 @router.post("/recommendations")
 @router.get("/recommendations")
 def recommendations() -> dict[str, str]:
-    return {"status": "not_implemented"}
+    return {"status": "planned", "disclaimer": "observational_recommendation"}
 
 
 @router.post("/admin/sync")
 def admin_sync() -> dict[str, str]:
-    return {"status": "not_implemented", "reason": "memory_outbox_optional"}
+    return {"status": "skipped", "reason": "memory_outbox_optional"}

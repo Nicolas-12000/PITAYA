@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 
@@ -13,7 +12,10 @@ from pitaya.kernel.config import get_settings
 from pitaya.kernel.hashing import stable_test_mask
 from pitaya.kernel.metrics import compute_binary_metrics
 from pitaya.modules.catalog.domain import TARGET_COLUMN
-from pitaya.modules.modeling._internal.pipelines import build_training_pipeline, feature_columns_for_scenario
+from pitaya.modules.modeling._internal.pipelines import (
+    build_training_pipeline,
+    feature_columns_for_scenario,
+)
 from pitaya.modules.modeling.domain import FeatureScenario, ModelKind, TrainedModelRecord
 
 DEFAULT_MODELS = (

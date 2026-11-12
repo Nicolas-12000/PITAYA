@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from pitaya.kernel.config import get_settings
 from pitaya.orchestration.context import AppContext

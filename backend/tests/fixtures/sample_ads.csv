@@ -1,0 +1,6 @@
+ad_id,xyz_campaign_id,fb_campaign_id,age,gender,interest,Impressions,Clicks,Spent,Approved_Conversion,Total_Conversion
+1,916,100,30-34,male,8,1000,50,25.0,5,8
+2,916,100,35-39,female,16,2000,80,40.0,3,6
+3,936,101,30-34,male,8,1500,60,30.0,2,4
+4,1178,102,35-39,female,64,800,20,15.0,1,2
+5,1178,102,40-44,male,8,1200,40,20.0,0,1

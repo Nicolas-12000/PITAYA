@@ -35,14 +35,20 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     df = load_dataset_from_path(source)
     summary = summarize_dataset(df)
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    csv_dest = ads_csv_path() if snapshot_dir == settings.resolved_snapshot_dir() else snapshot_dir / "ads.csv"
+    if snapshot_dir == settings.resolved_snapshot_dir():
+        csv_dest = ads_csv_path()
+    else:
+        csv_dest = snapshot_dir / "ads.csv"
     csv_dest.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(csv_dest, index=False)
     gz_path = write_compressed_snapshot(csv_dest)
     content_hash = sha256_file(gz_path)
 
     print("[ingest] OK")
-    print(f"  rows={summary.row_count} cols={summary.column_count} converted_rate={summary.converted_rate:.4f}")
+    print(
+        f"  rows={summary.row_count} cols={summary.column_count} "
+        f"converted_rate={summary.converted_rate:.4f}"
+    )
     print(f"  snapshot={gz_path}")
     print(f"  dataset_hash={content_hash}")
     return 0
@@ -91,7 +97,10 @@ def cmd_verify_idempotent(_args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="pitaya.cli", description="PITAYA offline CRISP-DM commands")
+    parser = argparse.ArgumentParser(
+        prog="pitaya.cli",
+        description="PITAYA offline CRISP-DM commands",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_ingest = sub.add_parser("ingest", help="Validate CSV and write snapshot")

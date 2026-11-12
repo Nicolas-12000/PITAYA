@@ -1,6 +1,6 @@
 import pandas as pd
 
-from pitaya.modules.catalog.domain import add_conversion_target, validate_schema
+from pitaya.modules.catalog.domain import add_conversion_target
 
 
 def test_conversion_target() -> None:
