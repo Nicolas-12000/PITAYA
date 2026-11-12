@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# uv
+backend/.venv/
+
+# Data (local only)
+data/
+*.db
+!backend/snapshot/.gitkeep
+
+# Raw downloads
+backend/snapshot/ads.csv
+backend/snapshot/ads.csv.gz
+backend/snapshot/models/*.joblib
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Env secrets
+.env
+.env.*
+!.env.example
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
