@@ -1,26 +1,127 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Tokens (FRONTEND.md §4 y §8) ───────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #fcf8fa; --surface-1: #ffffff; --surface-2: #f8f1f5; --surface-3: #f1e7ed; --surface-4: #eadde5;
+  --hairline: #eadce4; --hairline-strong: #d9c6d2; --hairline-tertiary: #c7b0bf;
+  --ink: #1b1119; --ink-muted: #55434f; --ink-subtle: #7d6b77; --ink-tertiary: #a29098;
+  --primary: #c8327e; --primary-hover: #b02b6f; --primary-pressed: #96245e;
+  --primary-text: #b3276f; --primary-subtle: rgb(200 50 126 / 0.10); --on-primary: #ffffff;
+  --s1: #c8327e; --s2: #6e56cf; --s3: #1f9a6b; --s4: #b87a0a; --s5: #1e8fa3; --s6: #cf3d55;
+  --success-ink: #14724f; --warning-ink: #7a4f00; --danger-ink: #a82a40; --info-ink: #5b44b8;
+  --mark-ink: #1b1119; --mark-shade: #a82a6c; --mark-cheek: #f9a8cc; --mark-tongue: #f07db3;
+  color-scheme: light;
+}
+.dark {
+  --canvas: #0a0709; --surface-1: #120c11; --surface-2: #181118; --surface-3: #1f161f; --surface-4: #261b25;
+  --hairline: #2a1f29; --hairline-strong: #3a2c39; --hairline-tertiary: #4a3948;
+  --ink: #f7f2f5; --ink-muted: #d3c7cf; --ink-subtle: #9a8a96; --ink-tertiary: #6b5c68;
+  --primary: #c8327e; --primary-hover: #db4a93; --primary-pressed: #ad2a6c;
+  --primary-text: #f07db3; --primary-subtle: rgb(200 50 126 / 0.14); --on-primary: #ffffff;
+  --s1: #e0549a; --s2: #9c86f5; --s3: #3dbe8b; --s4: #f2b84b; --s5: #3fb8c9; --s6: #f0707f;
+  --success-ink: #3dbe8b; --warning-ink: #f2b84b; --danger-ink: #f0707f; --info-ink: #9c86f5;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1); --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3); --color-surface-4: var(--surface-4);
+  --color-hairline: var(--hairline); --color-hairline-strong: var(--hairline-strong);
+  --color-hairline-tertiary: var(--hairline-tertiary);
+  --color-ink: var(--ink); --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle); --color-ink-tertiary: var(--ink-tertiary);
+  --color-primary: var(--primary); --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed); --color-primary-text: var(--primary-text);
+  --color-primary-subtle: var(--primary-subtle); --color-on-primary: var(--on-primary);
+  --color-series-1: var(--s1); --color-series-2: var(--s2); --color-series-3: var(--s3);
+  --color-series-4: var(--s4); --color-series-5: var(--s5); --color-series-6: var(--s6);
+  --color-success-ink: var(--success-ink); --color-warning-ink: var(--warning-ink);
+  --color-danger-ink: var(--danger-ink); --color-info-ink: var(--info-ink);
+  --font-sans: var(--font-geist-sans); --font-mono: var(--font-geist-mono);
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+  --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base ───────────────────────────────────────────────────── */
+html { background: var(--canvas); }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.1px;
+  -webkit-font-smoothing: antialiased;
 }
+::selection { background: var(--primary-subtle); }
+:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; border-radius: 4px; }
+.tabular, .font-mono { font-variant-numeric: tabular-nums; }
+
+@utility label-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@utility type-headline { font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.6px; }
+@utility type-title { font-size: 20px; line-height: 1.3; font-weight: 500; letter-spacing: -0.3px; }
+@utility type-kpi { font-size: 36px; line-height: 1; font-weight: 500; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+@utility type-kpi-hero { font-size: clamp(36px, 3.2vw, 44px); line-height: 1; font-weight: 500; letter-spacing: -1.4px; font-variant-numeric: tabular-nums; }
+@utility type-display { font-size: 48px; line-height: 1.08; font-weight: 600; letter-spacing: -1.6px; }
+
+/* Datos simulados: ámbar con borde punteado (§4.3) */
+@utility simulated-frame {
+  border: 1px dashed var(--s4);
+}
+
+/* Pequeña textura de puntos para los marcos de figuras (sin degradado de color) */
+@utility dot-grid {
+  background-image: radial-gradient(var(--hairline-strong) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* ── Skeleton (§7) ──────────────────────────────────────────── */
+.skeleton {
+  background-color: var(--surface-2);
+  background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--surface-4) 70%, transparent), transparent);
+  background-size: 200% 100%;
+  animation: sweep 1.6s ease-in-out infinite;
+}
+@keyframes sweep { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+/* ── Mascota (§20) ──────────────────────────────────────────── */
+.pitaya-eyes { transform-box: fill-box; transform-origin: center; animation: blink 5.5s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1) } 97% { transform: scaleY(0.1) } }
+.pitaya-hop { animation: hop 520ms cubic-bezier(0.2, 0, 0, 1) 1; }
+@keyframes hop { 40% { transform: translateY(-8%) } 100% { transform: none } }
+
+/* ── Figuras FIG 0.x (§21) ──────────────────────────────────── */
+.fig-draw polygon, .fig-draw path, .fig-draw line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 900ms cubic-bezier(0.2, 0, 0, 1) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+
+/* Barras que crecen al montar */
+.bar-grow { transform-origin: left center; animation: grow 320ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes grow { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+
+.fade-in { animation: fade 200ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .pitaya-eyes, .pitaya-hop, .bar-grow, .fade-in { animation: none; }
+  .fig-draw polygon, .fig-draw path, .fig-draw line { animation: none; stroke-dashoffset: 0; }
+  * { transition-duration: 0ms !important; }
+}
+
+/* Recharts: tipografía de ejes y sin contorno de foco por defecto */
+.recharts-wrapper, .recharts-surface { outline: none; }
+.recharts-cartesian-axis-tick-value { font-size: 12px; fill: var(--ink-subtle); font-variant-numeric: tabular-nums; }
+
+/* Range input en tokens */
+input[type="range"] { accent-color: var(--primary); }
+
+/* Scrollbar discreta */
+* { scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent; }
