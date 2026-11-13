@@ -56,7 +56,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 ::selection { background: var(--primary-subtle); }
-:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; border-radius: 4px; }
+/* En la capa base para que las utilidades (p. ej. outline-none) puedan anularlo */
+@layer base {
+  :focus-visible { outline: 2px solid var(--primary-text); outline-offset: 2px; }
+}
 .tabular, .font-mono { font-variant-numeric: tabular-nums; }
 
 @utility label-mono {
