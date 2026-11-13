@@ -12,9 +12,7 @@ def load_kaggle_dataframe_pandas():
         import kagglehub
         from kagglehub import KaggleDatasetAdapter
     except ImportError as exc:
-        raise RuntimeError(
-            "Install: cd backend && uv sync --extra data"
-        ) from exc
+        raise RuntimeError("Install: cd backend && uv sync --extra data") from exc
 
     return kagglehub.load_dataset(
         KaggleDatasetAdapter.PANDAS,

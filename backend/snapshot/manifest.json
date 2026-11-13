@@ -1,6 +1,6 @@
 {
   "stage": "train",
-  "created_at": "2026-11-13T00:38:19.803108+00:00",
+  "created_at": "2026-11-13T00:40:44.756734+00:00",
   "dataset_hash": "99ac61083c302696c7e5381dd4a2ac2e62fb6e075e430695b7ea6fea0f29f0b7",
   "random_seed": 42,
   "feature_scenario": "inflight",
@@ -11,8 +11,17 @@
       "artifact": "dummy_inflight.joblib",
       "metrics": {
         "cv_roc_auc": 0.5159707031462557,
+        "cv_pr_auc": 0.4704144617634972,
+        "cv_f1": 0.4729241877256318,
+        "cv_precision": 0.47985347985347987,
+        "cv_recall": 0.46619217081850534,
+        "cv_brier": 0.48026315789473684,
         "test_roc_auc": 0.5439814814814814,
-        "test_f1": 0.4888888888888889
+        "test_pr_auc": 0.4949813258636788,
+        "test_f1": 0.4888888888888889,
+        "test_precision": 0.5238095238095238,
+        "test_recall": 0.4583333333333333,
+        "test_brier": 0.45098039215686275
       }
     },
     {
@@ -20,8 +29,17 @@
       "artifact": "logistic_regression_inflight.joblib",
       "metrics": {
         "cv_roc_auc": 0.6388390087825262,
+        "cv_pr_auc": 0.6660177433687162,
+        "cv_f1": 0.5714285714285714,
+        "cv_precision": 0.6244725738396625,
+        "cv_recall": 0.5266903914590747,
+        "cv_brier": 0.2306584350217259,
         "test_roc_auc": 0.6433470507544581,
-        "test_f1": 0.5423728813559322
+        "test_pr_auc": 0.6872073443011266,
+        "test_f1": 0.5423728813559322,
+        "test_precision": 0.6956521739130435,
+        "test_recall": 0.4444444444444444,
+        "test_brier": 0.22124924534681337
       }
     },
     {
@@ -29,8 +47,17 @@
       "artifact": "knn_inflight.joblib",
       "metrics": {
         "cv_roc_auc": 0.5678605243396782,
+        "cv_pr_auc": 0.5484963882272166,
+        "cv_f1": 0.4729981378026071,
+        "cv_precision": 0.49609375,
+        "cv_recall": 0.45195729537366547,
+        "cv_brier": 0.2958104538987179,
         "test_roc_auc": 0.5457818930041153,
-        "test_f1": 0.49230769230769234
+        "test_pr_auc": 0.59658431558212,
+        "test_f1": 0.49230769230769234,
+        "test_precision": 0.5517241379310345,
+        "test_recall": 0.4444444444444444,
+        "test_brier": 0.31575533445671977
       }
     },
     {
@@ -38,8 +65,17 @@
       "artifact": "random_forest_inflight.joblib",
       "metrics": {
         "cv_roc_auc": 0.5960309945911826,
-        "test_roc_auc": 0.6082818930041153,
-        "test_f1": 0.45871559633027525
+        "cv_pr_auc": 0.6473990172942923,
+        "cv_f1": 0.4948453608247423,
+        "cv_precision": 0.5882352941176471,
+        "cv_recall": 0.42704626334519574,
+        "cv_brier": 0.23378112401502946,
+        "test_roc_auc": 0.6005658436213992,
+        "test_pr_auc": 0.6125969912867046,
+        "test_f1": 0.44660194174757284,
+        "test_precision": 0.7419354838709677,
+        "test_recall": 0.3194444444444444,
+        "test_brier": 0.23919210556260828
       }
     },
     {
@@ -47,14 +83,67 @@
       "artifact": "adaboost_inflight.joblib",
       "metrics": {
         "cv_roc_auc": 0.6037850838529935,
-        "test_roc_auc": 0.5696159122085048,
-        "test_f1": 0.42201834862385323
+        "cv_pr_auc": 0.6309652300430744,
+        "cv_f1": 0.5,
+        "cv_precision": 0.6608187134502924,
+        "cv_recall": 0.40213523131672596,
+        "cv_brier": 0.23236988670525266,
+        "test_roc_auc": 0.5919067215363512,
+        "test_pr_auc": 0.6052405049859537,
+        "test_f1": 0.4230769230769231,
+        "test_precision": 0.6875,
+        "test_recall": 0.3055555555555556,
+        "test_brier": 0.2434617576567482
       }
     }
   ],
+  "cv_fold_roc_auc": {
+    "dummy": [
+      0.47206477732793517,
+      0.5124458874458875,
+      0.5289502164502164,
+      0.5499999999999999,
+      0.5167582417582418
+    ],
+    "logistic_regression": [
+      0.6653171390013495,
+      0.6493506493506495,
+      0.591991341991342,
+      0.6208791208791209,
+      0.6747252747252747
+    ],
+    "knn": [
+      0.5721997300944669,
+      0.5511363636363636,
+      0.49864718614718617,
+      0.6035714285714285,
+      0.6156593406593407
+    ],
+    "random_forest": [
+      0.6144399460188933,
+      0.5830627705627706,
+      0.5462662337662337,
+      0.6214285714285714,
+      0.625
+    ],
+    "adaboost": [
+      0.608502024291498,
+      0.6135010822510822,
+      0.5833333333333334,
+      0.6206043956043955,
+      0.6104395604395605
+    ]
+  },
+  "model_comparison": {
+    "random_forest_vs_adaboost_wilcoxon": {
+      "statistic": 6.0,
+      "p_value": 0.8125
+    }
+  },
   "notes": {
     "linear_model": "LogisticRegression (multivariate linear decision boundary)",
     "knn": "KNeighborsClassifier k=15",
-    "leakage": "Total_Conversion excluded from features"
+    "leakage": "Total_Conversion excluded from features",
+    "calibration": "isotonic for random_forest and adaboost"
   }
 }

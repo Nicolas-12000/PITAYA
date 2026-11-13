@@ -78,6 +78,19 @@ Modelos previstos en el pipeline offline (ver `make train`):
 
 No se usa `Total_Conversion` como feature (evitar data leakage).
 
+## Backend — checklist (API `/v1`)
+
+| Endpoint | Estado |
+|----------|--------|
+| health, status, kpis, segments, channels/compare, predict | ✅ |
+| roi, models (manifest), ab-test (Holm + bayesiano + bootstrap) | ✅ |
+| attribution Shapley A + modelos sintéticos B | ✅ |
+| recommendations + Idempotency-Key + GET list | ✅ (memoria + SQLite opcional) |
+| admin/sync (outbox best-effort) | ✅ |
+| CRISP: download → quality → ingest → train | ✅ |
+
+Pendiente despliegue: Vercel, PostgreSQL productivo, cobertura ≥80% (hoy ~69%), notebook EDA con gráficos ejecutados.
+
 ## Licencia
 
 Proyecto académico — Minería de Datos.

@@ -6,10 +6,10 @@ Proyecto creado con `pnpm create next-app@latest`. **No implementar analítica a
 |---------------------|------------------|-------|
 | `/` | `GET /v1/kpis` | KPIs globales |
 | `/campaigns` | `GET /v1/segments` | Campaña, edad, género, interés |
-| `/models` | `GET /v1/status` + manifest | `backend/snapshot/manifest.json` |
-| `/roi` | `GET /v1/kpis` | `value_per_approved_conversion` |
-| `/experiments` | `POST /v1/ab-test` | **Observacional** |
-| `/attribution` | `GET /v1/attribution` | Shapley nivel A (pendiente) |
+| `/models` | `GET /v1/models` | Manifest + Wilcoxon RF vs AdaBoost |
+| `/roi` | `GET /v1/roi` | Sensibilidad y break-even |
+| `/experiments` | `POST /v1/ab-test` | Holm + bayesiano + bootstrap CPA |
+| `/attribution` | `GET /v1/attribution` | Shapley A; `?model=linear` nivel B simulado |
 | `/budget` | `POST /v1/recommendations` | Idempotency-Key |
 | `/status` | `GET /v1/status` | memory / snapshot |
 | What-if | `POST /v1/predict` | `scenario`: prelaunch \| inflight |

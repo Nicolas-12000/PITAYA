@@ -18,4 +18,4 @@ def test_ab_pairwise_observational() -> None:
     df = add_conversion_target(pd.read_csv("tests/fixtures/sample_ads.csv"))
     result = run_pairwise_ab_analysis(df, campaign_ids=(916, 936, 1178))
     assert result["analysis_type"] == "observational"
-    assert len(result["comparisons"]) == 3
+    assert len(result["frequentist_comparisons"]) >= 3
