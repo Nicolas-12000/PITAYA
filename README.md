@@ -11,7 +11,7 @@
 | Área | Estado |
 |------|--------|
 | Backend: API `/v1`, dominio, snapshot, `make ingest` / `train`, CI (ruff, mypy, pytest ≥80 %) | **Listo** |
-| Frontend: dashboard y pantallas analíticas | **Pendiente** — guía [frontend/FRONTEND.md](./frontend/FRONTEND.md); hoy solo scaffold `create-next-app` |
+| Frontend: dashboard y 10 pantallas analíticas (Next.js 16, Tailwind v4, Recharts) | **Listo** — ver [frontend/README.md](./frontend/README.md) y [frontend/FRONTEND.md](./frontend/FRONTEND.md) |
 
 Lo demás (deploy Vercel, PostgreSQL en producción, EDA en notebook) es opcional y no bloquea desarrollo local.
 
@@ -36,7 +36,8 @@ make backend-dev
 # → http://localhost:8000/v1/health
 # → http://localhost:8000/docs
 
-# Frontend (base Next, opcional)
+# Frontend (requiere el backend en :8000)
+cp frontend/.env.example frontend/.env.local
 make frontend-install
 make frontend-dev
 # → http://localhost:3000
