@@ -2,7 +2,9 @@ import argparse
 import sys
 from pathlib import Path
 
+from pitaya.cli.download import download_facebook_ads_csv, print_download_help
 from pitaya.kernel.config import get_settings
+from pitaya.kernel.paths import raw_dataset_path
 from pitaya.kernel.hashing import sha256_file
 from pitaya.modules.catalog.api import dataset_content_hash, load_dataset_from_path
 from pitaya.modules.catalog.domain import add_conversion_target, summarize_dataset
@@ -15,7 +17,7 @@ from pitaya.platform.storage.snapshot import (
 
 
 def _default_source_csv() -> Path:
-    return Path("data/raw/facebook-ad-campaign.csv")
+    return raw_dataset_path()
 
 
 def cmd_ingest(args: argparse.Namespace) -> int:
@@ -24,10 +26,10 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     snapshot_dir = settings.resolved_snapshot_dir()
 
     if not source.exists():
+        print(f"[ingest] Source not found: {source}", file=sys.stderr)
+        print_download_help()
         print(
-            f"[ingest] Source not found: {source}\n"
-            "Download Kaggle dataset (madislemsalu/facebook-ad-campaign) to data/raw/\n"
-            "Or pass: python -m pitaya.cli ingest --source /path/to/file.csv",
+            "Or: python -m pitaya.cli ingest --source /path/to/file.csv",
             file=sys.stderr,
         )
         return 1
@@ -80,6 +82,21 @@ def cmd_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_download(_args: argparse.Namespace) -> int:
+    try:
+        dest = download_facebook_ads_csv()
+    except RuntimeError as exc:
+        print(f"[download] {exc}", file=sys.stderr)
+        print_download_help()
+        return 1
+    except Exception as exc:
+        print(f"[download] Failed: {exc}", file=sys.stderr)
+        print_download_help()
+        return 1
+    print(f"[download] OK -> {dest}")
+    return 0
+
+
 def cmd_verify_idempotent(_args: argparse.Namespace) -> int:
     settings = get_settings()
     snapshot_dir = settings.resolved_snapshot_dir()
@@ -102,6 +119,9 @@ def main(argv: list[str] | None = None) -> int:
         description="PITAYA offline CRISP-DM commands",
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_download = sub.add_parser("download", help="Fetch Kaggle CSV via kagglehub")
+    p_download.set_defaults(func=cmd_download)
 
     p_ingest = sub.add_parser("ingest", help="Validate CSV and write snapshot")
     p_ingest.add_argument("--source", type=str, default=None)

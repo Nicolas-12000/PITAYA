@@ -25,6 +25,9 @@ dev = [
     "mypy>=1.13.0",
     "pandas-stubs>=2.2.0",
 ]
+data = [
+    "kagglehub[pandas-datasets]>=0.3.0",
+]
 
 [build-system]
 requires = ["hatchling"]

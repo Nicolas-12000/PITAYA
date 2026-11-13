@@ -1,4 +1,4 @@
-.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev train ingest verify-idempotent crisp-dm check-python-clean
+.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent crisp-dm check-python-clean
 
 BACKEND := backend
 UV := cd $(BACKEND) && uv
@@ -17,14 +17,15 @@ help:
 	@echo "  make frontend-dev       next dev (puerto 3000)"
 	@echo ""
 	@echo "  CRISP-DM / datos:"
-	@echo "  make ingest             Descargar/validar dataset → snapshot"
+	@echo "  make download           Kaggle CSV → data/raw/ (kagglehub)"
+	@echo "  make ingest             Validar dataset → snapshot"
 	@echo "  make train              Entrenar modelos offline → snapshot/models"
 	@echo "  make verify-idempotent  Verificar pipeline idempotente"
 	@echo ""
 	@echo "  make crisp-dm           Mostrar mapa de fases CRISP-DM del repo"
 
 install sync:
-	$(UV) sync
+	$(UV) sync --all-extras
 
 lint:
 	$(UV) run ruff check .
@@ -50,6 +51,9 @@ frontend-dev:
 check-python-clean:
 	@! python3 -c "import fastapi" 2>/dev/null && echo "[check-python-clean] OK: fastapi no está en el Python del sistema" || (echo "[check-python-clean] FAIL: fastapi importable fuera del venv" >&2; exit 1)
 	@cd $(BACKEND) && uv run python -c "import fastapi; print('[check-python-clean] OK: fastapi en', fastapi.__file__)"
+
+download:
+	$(UV) run python -m pitaya.cli download
 
 ingest:
 	$(UV) run python -m pitaya.cli ingest

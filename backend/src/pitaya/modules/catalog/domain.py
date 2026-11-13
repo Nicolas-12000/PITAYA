@@ -5,6 +5,7 @@ import pandas as pd
 
 from pitaya.kernel.config import LEAKAGE_COLUMNS
 from pitaya.kernel.errors import DataValidationError
+from pitaya.modules.catalog.normalize import normalize_facebook_ads_dataframe
 
 TARGET_COLUMN = "converted"
 APPROVED_COLUMN = "Approved_Conversion"
@@ -65,5 +66,6 @@ def load_csv(path: Path) -> pd.DataFrame:
     if not path.exists():
         raise DataValidationError(f"Dataset file not found: {path}")
     df = pd.read_csv(path)
+    df = normalize_facebook_ads_dataframe(df)
     validate_schema(df)
     return add_conversion_target(df)

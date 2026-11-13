@@ -1,0 +1,60 @@
+{
+  "stage": "train",
+  "created_at": "2026-11-13T00:35:40.638746+00:00",
+  "dataset_hash": "ad213b8bb6ec2bf32189612db87fa797e70be906426e6fbc3c5d45685c57a7dd",
+  "random_seed": 42,
+  "feature_scenario": "inflight",
+  "sklearn_version": "1.9.1",
+  "models": [
+    {
+      "kind": "dummy",
+      "artifact": "dummy_inflight.joblib",
+      "metrics": {
+        "cv_roc_auc": 0.5215629893238434,
+        "test_roc_auc": 0.5472222222222223,
+        "test_f1": 0.36619718309859156
+      }
+    },
+    {
+      "kind": "logistic_regression",
+      "artifact": "logistic_regression_inflight.joblib",
+      "metrics": {
+        "cv_roc_auc": 0.8091103202846974,
+        "test_roc_auc": 0.8243265993265994,
+        "test_f1": 0.6217616580310881
+      }
+    },
+    {
+      "kind": "knn",
+      "artifact": "knn_inflight.joblib",
+      "metrics": {
+        "cv_roc_auc": 0.7800540925266903,
+        "test_roc_auc": 0.774158249158249,
+        "test_f1": 0.48854961832061067
+      }
+    },
+    {
+      "kind": "random_forest",
+      "artifact": "random_forest_inflight.joblib",
+      "metrics": {
+        "cv_roc_auc": 0.8021153024911032,
+        "test_roc_auc": 0.8175925925925925,
+        "test_f1": 0.6243386243386243
+      }
+    },
+    {
+      "kind": "adaboost",
+      "artifact": "adaboost_inflight.joblib",
+      "metrics": {
+        "cv_roc_auc": 0.8055402135231317,
+        "test_roc_auc": 0.8081649831649832,
+        "test_f1": 0.42201834862385323
+      }
+    }
+  ],
+  "notes": {
+    "linear_model": "LogisticRegression (multivariate linear decision boundary)",
+    "knn": "KNeighborsClassifier k=15",
+    "leakage": "Total_Conversion excluded from features"
+  }
+}

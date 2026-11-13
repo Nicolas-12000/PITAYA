@@ -16,7 +16,9 @@ htmlcov/
 backend/.venv/
 
 # Data (local only)
-data/
+data/*
+!data/README.md
+!data/raw/.gitkeep
 *.db
 !backend/snapshot/.gitkeep
 
