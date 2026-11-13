@@ -37,13 +37,13 @@ def health() -> HealthResponse:
 @router.get("/status", response_model=StatusResponse)
 def get_status(request: Request) -> StatusResponse:
     ctx = request.app.state.ctx
-    return StatusResponse(**status.build_status_view(ctx))
+    return StatusResponse.model_validate(status.build_status_view(ctx))
 
 
 @router.get("/kpis", response_model=KpisResponse)
 def get_kpis() -> KpisResponse:
     try:
-        return KpisResponse(**kpis.get_kpis_workflow())
+        return KpisResponse.model_validate(kpis.get_kpis_workflow())
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -67,7 +67,7 @@ def get_models() -> dict[str, object]:
 @router.get("/segments", response_model=SegmentsResponse)
 def get_segments() -> SegmentsResponse:
     try:
-        return SegmentsResponse(**segments.get_segments_workflow())
+        return SegmentsResponse.model_validate(segments.get_segments_workflow())
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -83,8 +83,8 @@ def compare_channels() -> dict[str, object]:
 @router.post("/predict", response_model=PredictResponse)
 def post_predict(body: PredictRequest) -> PredictResponse:
     try:
-        return PredictResponse(
-            **predict.predict_workflow(body.records, body.model_kind, body.scenario)
+        return PredictResponse.model_validate(
+            predict.predict_workflow(body.records, body.model_kind, body.scenario)
         )
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -95,7 +95,7 @@ def post_predict(body: PredictRequest) -> PredictResponse:
 @router.post("/ab-test", response_model=AbTestResponse)
 def post_ab_test(body: AbTestRequest) -> AbTestResponse:
     try:
-        return AbTestResponse(**ab_test.ab_test_workflow(body.campaign_ids))
+        return AbTestResponse.model_validate(ab_test.ab_test_workflow(body.campaign_ids))
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -117,8 +117,8 @@ def post_recommendations(
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> RecommendResponse:
     try:
-        return RecommendResponse(
-            **budget.recommend_workflow(
+        return RecommendResponse.model_validate(
+            budget.recommend_workflow(
                 request.app.state.ctx,
                 body.total_budget,
                 body.min_share,

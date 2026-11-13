@@ -62,7 +62,7 @@ def aggregate_by_dimensions(
     for keys, group in df.groupby(dimensions, dropna=False):
         if not isinstance(keys, tuple):
             keys = (keys,)
-        entry = {dim: keys[i] for i, dim in enumerate(dimensions)}
+        entry: dict[str, Any] = {dim: keys[i] for i, dim in enumerate(dimensions)}
         entry["kpis"] = compute_group_kpis(group, value_per_approved_conversion)
         entry["row_count"] = len(group)
         rows.append(entry)

@@ -56,7 +56,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--cov=pitaya --cov-fail-under=68"
+addopts = "--cov=pitaya --cov-fail-under=80"
 
 [tool.uv]
 managed = true

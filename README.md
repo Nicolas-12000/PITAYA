@@ -89,7 +89,7 @@ No se usa `Total_Conversion` como feature (evitar data leakage).
 | admin/sync (outbox best-effort) | ✅ |
 | CRISP: download → quality → ingest → train | ✅ |
 
-Pendiente despliegue: Vercel, PostgreSQL productivo, cobertura ≥80% (hoy ~69%), notebook EDA con gráficos ejecutados.
+Calidad: cobertura ≥80 %, ruff, mypy en CI — ver [docs/QUALITY.md](docs/QUALITY.md). Pendiente: deploy Vercel, PostgreSQL productivo, cliente OpenAPI en frontend.
 
 ## Licencia
 

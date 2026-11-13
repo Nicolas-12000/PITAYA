@@ -34,7 +34,7 @@ class DataQualityReport:
 
 def _parse_campaign_id(value: object) -> int | None:
     try:
-        return int(float(value))
+        return int(float(str(value)))
     except (TypeError, ValueError):
         return None
 

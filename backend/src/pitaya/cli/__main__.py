@@ -89,7 +89,9 @@ def cmd_train(args: argparse.Namespace) -> int:
 
     manifest = run_offline_training(df, snapshot_dir, dataset_hash)
     print("[train] OK")
-    print(f"  models trained: {len(manifest.get('models', []))}")
+    models = manifest.get("models", [])
+    trained_count = len(models) if isinstance(models, list) else 0
+    print(f"  models trained: {trained_count}")
     print(f"  manifest={snapshot_dir / 'manifest.json'}")
     return 0
 

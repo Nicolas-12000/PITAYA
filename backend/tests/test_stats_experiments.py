@@ -1,8 +1,6 @@
 import numpy as np
-import pandas as pd
 
 from pitaya.kernel.stats import beta_binomial_mean, bootstrap_mean
-from pitaya.modules.catalog.domain import add_conversion_target
 from pitaya.modules.experiments.domain import sample_size_duration_simulator
 
 
