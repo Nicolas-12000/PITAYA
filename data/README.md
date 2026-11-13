@@ -33,6 +33,8 @@ df = kagglehub.load_dataset(
 
 `make download` hace eso, normaliza columnas y guarda `data/raw/facebook-ad-campaign.csv`.
 
+Tras `make ingest`, puedes exportar un extracto real para tests con `make export-test-fixture` (escribe `backend/tests/fixtures/sample_ads.csv`). No editar ese CSV a mano con datos inventados.
+
 ### Opción B — Kaggle CLI
 
 ```bash

@@ -11,6 +11,7 @@ from pitaya.kernel.hashing import sha256_file
 from pitaya.kernel.paths import raw_dataset_path
 from pitaya.modules.catalog.api import dataset_content_hash
 from pitaya.modules.catalog.domain import (
+    EXPECTED_COLUMNS,
     add_conversion_target,
     prepare_raw_dataframe,
     summarize_dataset,
@@ -111,6 +112,39 @@ def cmd_download(_args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export_test_fixture(args: argparse.Namespace) -> int:
+    """Write tests/fixtures/sample_ads.csv from the current cleaned snapshot (real Kaggle rows)."""
+    repo_root = Path(__file__).resolve().parents[3]
+    dest = repo_root / "tests" / "fixtures" / "sample_ads.csv"
+    rows = int(args.rows)
+    try:
+        from pitaya.platform.storage.snapshot import load_snapshot_dataframe
+
+        df = load_snapshot_dataframe()
+    except Exception as exc:
+        print(
+            f"[export_test_fixture] No snapshot: {exc}. Run `make download && make ingest` first.",
+            file=sys.stderr,
+        )
+        return 1
+    if len(df) < rows:
+        print(
+            f"[export_test_fixture] Snapshot has {len(df)} rows; requested {rows}.",
+            file=sys.stderr,
+        )
+        return 1
+    subset = df.head(rows).drop(columns=["converted"], errors="ignore")
+    cols = [c for c in EXPECTED_COLUMNS if c in subset.columns]
+    missing = EXPECTED_COLUMNS - set(cols)
+    if missing:
+        print(f"[export_test_fixture] Snapshot missing columns: {sorted(missing)}", file=sys.stderr)
+        return 1
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    subset[cols].to_csv(dest, index=False)
+    print(f"[export_test_fixture] OK -> {dest} ({rows} rows from cleaned Kaggle data)")
+    return 0
+
+
 def cmd_verify_idempotent(_args: argparse.Namespace) -> int:
     settings = get_settings()
     snapshot_dir = settings.resolved_snapshot_dir()
@@ -146,6 +180,13 @@ def main(argv: list[str] | None = None) -> int:
 
     p_verify = sub.add_parser("verify_idempotent", help="Check snapshot hash stability")
     p_verify.set_defaults(func=cmd_verify_idempotent)
+
+    p_fixture = sub.add_parser(
+        "export_test_fixture",
+        help="Export real cleaned rows to tests/fixtures/sample_ads.csv (after ingest)",
+    )
+    p_fixture.add_argument("--rows", type=int, default=80)
+    p_fixture.set_defaults(func=cmd_export_test_fixture)
 
     args = parser.parse_args(argv)
     return int(args.func(args))
