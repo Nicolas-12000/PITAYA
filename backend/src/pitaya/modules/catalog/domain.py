@@ -6,6 +6,7 @@ import pandas as pd
 from pitaya.kernel.config import LEAKAGE_COLUMNS
 from pitaya.kernel.errors import DataValidationError
 from pitaya.modules.catalog.normalize import normalize_facebook_ads_dataframe
+from pitaya.modules.catalog.quality import DataQualityReport, clean_facebook_ads_dataframe
 
 TARGET_COLUMN = "converted"
 APPROVED_COLUMN = "Approved_Conversion"
@@ -62,10 +63,15 @@ def summarize_dataset(df: pd.DataFrame) -> DatasetSummary:
     )
 
 
+def prepare_raw_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, DataQualityReport]:
+    normalized = normalize_facebook_ads_dataframe(df)
+    cleaned, report = clean_facebook_ads_dataframe(normalized)
+    validate_schema(cleaned)
+    return add_conversion_target(cleaned), report
+
+
 def load_csv(path: Path) -> pd.DataFrame:
     if not path.exists():
         raise DataValidationError(f"Dataset file not found: {path}")
-    df = pd.read_csv(path)
-    df = normalize_facebook_ads_dataframe(df)
-    validate_schema(df)
-    return add_conversion_target(df)
+    df, _report = prepare_raw_dataframe(pd.read_csv(path))
+    return df

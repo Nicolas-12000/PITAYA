@@ -6,7 +6,7 @@ Mapa de la metodología **Cross-Industry Standard Process for Data Mining** a ar
 |---------------|-------------------|------------|---------------------|
 | 1. Business Understanding | ROI, presupuesto, conversión, A/B observacional | `PITAYA.MD` §1, §10 | — |
 | 2. Data Understanding | Esquema Kaggle, missing, balance de clases | `notebooks/01_eda.ipynb` | `make ingest` |
-| 3. Data Preparation | Target `converted`, features sin leakage, encoding | `modules/catalog/`, snapshot | `make ingest` |
+| 3. Data Preparation | Normalización, reglas de calidad, target `converted` | `catalog/normalize.py`, `catalog/quality.py`, `snapshot/quality_report.json` | `make ingest` |
 | 4. Modeling | Baselines, logística lineal, KNN, RF, AdaBoost | `modules/modeling/`, `snapshot/models/` | `make train` |
 | 5. Evaluation | ROC/PR-AUC, CV, calibración, comparación pareada | `snapshot/manifest.json`, tests | `make test`, `make verify-idempotent` |
 | 6. Deployment | API memory + snapshot, sin entrenar en request | `platform/web/`, Vercel | `make backend-dev` |
@@ -25,8 +25,17 @@ Mapa de la metodología **Cross-Industry Standard Process for Data Mining** a ar
 - **Fase 4–5**: `*.joblib`, métricas en `manifest.json`.
 - **Fase 6**: endpoints `/v1/*`, `/status` con modo de almacenamiento y hash de snapshot.
 
+## Limpieza aplicada en `ingest` (fase 3)
+
+- Campañas válidas: `916`, `936`, `1178` (descarta filas desalineadas del CSV Kaggle).
+- Género: `male` / `female`; edad con patrón `NN-NN`.
+- Sin `Approved_Conversion`; duplicados por `ad_id`; reglas lógicas CTR/conversiones.
+- Artefacto: `backend/snapshot/quality_report.json` con conteos por motivo.
+
+**Pendiente industria/curso:** EDA formal en notebook, outliers de `Spent` (IQR/winsor), calibración RF vs AdaBoost, Holm/Bayes en A/B, Shapley, presupuesto.
+
 ## Próximos pasos del equipo
 
-1. Completar EDA en notebook y fijar lista final de columnas.
-2. Ejecutar `make train` con dataset real de Kaggle.
-3. Implementar workflows de `performance`, `experiments`, `budget` (dominio).
+1. Notebook `01_eda.ipynb` (fase 2 — entendimiento + gráficos).
+2. Atribución, recomendador e idempotencia persistente.
+3. Cobertura ≥80 % y mypy limpio en CI.

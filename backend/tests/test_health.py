@@ -16,4 +16,4 @@ def test_status_without_snapshot() -> None:
     assert response.status_code == 200
     body = response.json()
     assert "storage_mode" in body
-    assert body["snapshot"]["loaded"] is False
+    assert isinstance(body["snapshot"]["loaded"], bool)

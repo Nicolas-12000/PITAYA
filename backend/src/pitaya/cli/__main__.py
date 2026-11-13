@@ -1,13 +1,16 @@
 import argparse
+import json
 import sys
 from pathlib import Path
+
+import pandas as pd
 
 from pitaya.cli.download import download_facebook_ads_csv, print_download_help
 from pitaya.kernel.config import get_settings
 from pitaya.kernel.paths import raw_dataset_path
 from pitaya.kernel.hashing import sha256_file
 from pitaya.modules.catalog.api import dataset_content_hash, load_dataset_from_path
-from pitaya.modules.catalog.domain import add_conversion_target, summarize_dataset
+from pitaya.modules.catalog.domain import add_conversion_target, prepare_raw_dataframe, summarize_dataset
 from pitaya.modules.modeling.api import run_offline_training
 from pitaya.platform.storage.snapshot import (
     ads_csv_path,
@@ -34,7 +37,8 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         )
         return 1
 
-    df = load_dataset_from_path(source)
+    raw = pd.read_csv(source)
+    df, quality = prepare_raw_dataframe(raw)
     summary = summarize_dataset(df)
     snapshot_dir.mkdir(parents=True, exist_ok=True)
     if snapshot_dir == settings.resolved_snapshot_dir():
@@ -53,6 +57,10 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     )
     print(f"  snapshot={gz_path}")
     print(f"  dataset_hash={content_hash}")
+    quality_path = snapshot_dir / "quality_report.json"
+    quality_path.write_text(json.dumps(quality.to_dict(), indent=2), encoding="utf-8")
+    print(f"  quality_report={quality_path}")
+    print(f"  rows_dropped={quality.rows_dropped} reasons={quality.drop_reasons}")
     return 0
 
 

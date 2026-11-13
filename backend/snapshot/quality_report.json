@@ -1,0 +1,14 @@
+{
+  "rows_in": 1143,
+  "rows_out": 761,
+  "rows_dropped": 382,
+  "drop_reasons": {
+    "invalid_campaign_id": 382
+  },
+  "duplicate_ad_ids": 0,
+  "missing_approved_before_clean": 382,
+  "logical_violations_flagged": {
+    "clicks_gt_impressions": 0,
+    "approved_gt_total": 0
+  }
+}
