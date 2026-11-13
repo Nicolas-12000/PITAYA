@@ -17,9 +17,9 @@
 - El frontend no replica cálculos del backend.
 
 ## Persistencia
-- La aplicación debe funcionar en `STORAGE_MODE=memory`.
-- SQLite se usa para desarrollo local.
-- PostgreSQL es opcional y se activa mediante `DATABASE_URL`.
+- La aplicación debe funcionar en `STORAGE_MODE=memory` (demo/Vercel).
+- **Desarrollo local:** `STORAGE_MODE=sqlite` y `DATABASE_URL=sqlite:///data/pitaya.db` (`.env.example`).
+- PostgreSQL opcional vía `DATABASE_URL` + `compose.yml`; extra `uv sync --extra postgres`.
 - La memoria y la caché son temporales; no afirmar que son persistentes.
 - En Vercel no depender de workers, hilos o timers para sincronización.
 - Si hay DB, intentar persistir en la misma petición.

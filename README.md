@@ -42,12 +42,15 @@ make frontend-dev
 # → http://localhost:3000
 ```
 
-Variables opcionales (copiar desde `.env.example`):
+Variables (copiar `.env.example` → `.env`):
 
 ```bash
-STORAGE_MODE=memory
+STORAGE_MODE=sqlite
+DATABASE_URL=sqlite:///data/pitaya.db   # recomendaciones durables en data/pitaya.db
 SNAPSHOT_DIR=snapshot
 ```
+
+**Persistencia:** el frontend solo llama al API. Lecturas = snapshot + caché en RAM del backend; SQL solo para recomendaciones (`Idempotency-Key`). Local: SQLite arriba. Vercel demo: `STORAGE_MODE=memory`. Postgres opcional: `make db-up` + `uv sync --extra postgres` (detalle en `PITAYA.MD` §6).
 
 ## Pipeline CRISP-DM (comandos)
 

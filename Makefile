@@ -1,4 +1,4 @@
-.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture crisp-dm check-python-clean
+.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture db-up db-down crisp-dm check-python-clean
 
 BACKEND := backend
 UV := cd $(BACKEND) && uv
@@ -22,6 +22,8 @@ help:
 	@echo "  make train              Entrenar modelos offline → snapshot/models"
 	@echo "  make verify-idempotent  Verificar pipeline idempotente"
 	@echo "  make export-test-fixture  Regenerar tests/fixtures desde snapshot (tras ingest)"
+	@echo "  make db-up              docker compose up -d postgres (opcional)"
+	@echo "  make db-down            docker compose down"
 	@echo ""
 	@echo "  make crisp-dm           Mostrar mapa de fases CRISP-DM del repo"
 
@@ -67,6 +69,12 @@ verify-idempotent:
 
 export-test-fixture:
 	$(UV) run python -m pitaya.cli export_test_fixture --rows 80
+
+db-up:
+	docker compose up -d postgres
+
+db-down:
+	docker compose down
 
 crisp-dm:
 	@cat docs/crisp-dm/README.md | head -n 40

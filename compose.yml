@@ -1,0 +1,21 @@
+# Opcional: Postgres local (Alpine). SQLite en data/pitaya.db es el default recomendado.
+# Uso: docker compose up -d && uv sync --extra postgres
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "${PITAYA_PG_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: pitaya
+      POSTGRES_PASSWORD: pitayax
+      POSTGRES_DB: pitaya
+    volumes:
+      - pitaya_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pitaya -d pitaya"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pitaya_pg_data:
