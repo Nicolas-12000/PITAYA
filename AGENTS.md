@@ -3,7 +3,7 @@
 ## Stack
 - Backend únicamente: Python 3.12, FastAPI, Pydantic y uv.
 - **Python solo en venv:** `backend/.venv` vía `uv sync` / `uv run`. Prohibido `pip install` en el intérprete del sistema o `--user`.
-- `frontend/`: base **create-next-app** (Next.js oficial) + guía única [frontend/FRONTEND.md](./frontend/FRONTEND.md) y [frontend/AGENTS.md](./frontend/AGENTS.md). Sin dashboard implementado hasta nueva petición.
+- `frontend/`: **pendiente** — scaffold **create-next-app** + [frontend/FRONTEND.md](./frontend/FRONTEND.md) (diseño y contrato API). Backend listo; no implementar analítica en el cliente.
 - Comunicación mediante API JSON documentada con OpenAPI.
 - No introducir servicios externos obligatorios.
 
@@ -34,6 +34,7 @@
 - Preprocesamiento dentro de `Pipeline` de scikit-learn.
 - Modelos: baselines, regresión logística (lineal), KNN, Random Forest y AdaBoost.
 - Todo dato simulado debe identificarse como simulado.
+- `backend/tests/fixtures/sample_ads.csv`: solo extracto real (Kaggle + `make ingest`); regenerar con `make export-test-fixture`, no filas inventadas.
 
 ## Calidad
 - Type hints en Python; ruff + mypy + pytest.

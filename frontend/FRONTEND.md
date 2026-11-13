@@ -506,7 +506,7 @@ Regla: lo que solo usa una pantalla vive en su carpeta _components/; solo sube a
 
 > **Implementación actual:** ver **sección 0** (endpoints reales, gaps del bloque `run` y de intervalos).
 
-Contrato con el backend (acordarlo en la semana 1):
+Contrato con el backend (ver también sección 0; API ya implementada):
 • El cliente se genera con pnpm gen:api desde /openapi.json. Los tipos de la API nunca se escriben a mano.
 • Toda respuesta incluye un bloque run (run_id, dataset_hash, mode: snapshot, memory o db, generated_at) que alimenta la RunBadge de la topbar.
 • Errores: 422 (validación, se mapea a errores de campo), 409 (misma Idempotency-Key con cuerpo distinto) y 5xx (ErrorState con reintento).
@@ -731,7 +731,8 @@ Patrón de datos. Server Components para la carga inicial (con Cache Components 
 • Meta de Lighthouse de 90 o más en / (rendimiento y accesibilidad), medida en el despliegue de preview.
 • Presupuesto orientativo de JS inicial por ruta inferior a 200 KB comprimidos; revisen con el analizador de bundle antes de agregar dependencias.
 18. Plan de trabajo y Definition of Done
-Días relativos al inicio del frontend (coincide con la fase 5 de la guía técnica).
+
+Único bloque de producto **pendiente** en el repo (el backend y la API `/v1` ya están listos). Días relativos al inicio del frontend.
 Fase
 Días
 Entregable

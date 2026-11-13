@@ -1,6 +1,6 @@
 # PITAYA frontend
 
-Scaffold oficial de Next.js (`pnpm create next-app@latest`). El desarrollo activo del equipo sigue en el **backend**; la UI se construye siguiendo la guía unificada.
+Scaffold oficial de Next.js (`pnpm create next-app@latest`). **Pendiente:** construir el dashboard y las pantallas (el backend ya expone `/v1`). Guía unificada abajo.
 
 ## Documentación
 

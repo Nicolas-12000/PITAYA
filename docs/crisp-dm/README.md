@@ -33,9 +33,3 @@ Mapa de la metodología **Cross-Industry Standard Process for Data Mining** a ar
 - Artefacto: `backend/snapshot/quality_report.json` con conteos por motivo.
 
 **Calidad de código:** CI y local con `make lint`, `make typecheck`, `make test` (ruff, mypy, pytest ≥80 % cobertura) — ver README del repo.
-
-## Próximos pasos del equipo
-
-1. Notebook `01_eda.ipynb` (fase 2 — entendimiento + gráficos).
-2. Atribución, recomendador e idempotencia persistente.
-3. Cobertura ≥80 % y mypy limpio en CI.

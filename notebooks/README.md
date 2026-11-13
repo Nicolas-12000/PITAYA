@@ -1,9 +1,9 @@
 # Notebooks (CRISP-DM fase 2)
 
-EDA fuera del runtime de serving. Crear `01_eda.ipynb` aquí.
+EDA fuera del runtime de serving: `01_eda.ipynb` (opcional para informe; no bloquea la API).
 
 ```bash
 cd backend
 uv sync --all-extras
-uv run jupyter lab  # añadir jupyter al grupo dev cuando se necesite
+# Jupyter cuando lo necesites: añadir al grupo dev en pyproject y `uv run jupyter lab`
 ```

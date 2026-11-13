@@ -47,7 +47,7 @@ Aplicación web	frontend/ + backend/	Next.js como interfaz y FastAPI como API JS
 3. Dataset y límites
 Dataset Facebook Ad Campaign de Kaggle (madislemsalu/facebook-ad-campaign). Según su descripción habitual, contiene aproximadamente 1.143 filas y columnas como ad_id, xyz_campaign_id (916, 936, 1178), fb_campaign_id, age, gender, interest, Impressions, Clicks, Spent, Total_Conversion y Approved_Conversion.
 
-El primer día se debe confirmar el esquema real con df.info(), revisar valores faltantes y validar tipos. No se deben asumir las cantidades o columnas sin inspeccionar el archivo descargado.
+El esquema se valida en `make ingest` (normalización Kaggle + `quality_report.json`). Tras limpieza quedan ~761 filas útiles (se descartan filas con campaña mal alineada en el CSV fuente).
 Lo que el dataset no contiene
 - No tiene fechas ni trayectorias de usuario: no permite reconstruir atribución multitoque real. El Nivel A atribuye resultados a factores disponibles (campaña, edad, género e interés) mediante Shapley. El Nivel B usa trayectorias sintéticas y debe llevar una etiqueta visible de “Datos simulados”.
 - Solo contiene Facebook: se comparan campañas y segmentos. channel queda como dimensión preparada para futuras fuentes.
@@ -517,16 +517,24 @@ Los límites de tamaño, memoria, duración, runtime y disponibilidad de caracte
 Mantener las peticiones web cortas. No ejecutar EDA, entrenamiento, SHAP costoso ni búsquedas de datasets en una función serverless. Precalcular y versionar esos resultados.
 12.7 Plan B
 Si el runtime Python, el tamaño del bundle o la integración conjunta presentan problemas, mantener el mismo código y desplegar el backend en un entorno compatible con ASGI y el frontend en Vercel. Esta alternativa no cambia el diseño de dominio ni obliga a añadir una base de datos.
-13. Plan por fases
-Fase	Trabajo	Criterio de salida
-0. Setup	Repositorio, Next.js, FastAPI, uv, pnpm, estructura modular, CI y Makefile	Frontend y /health funcionan localmente
-1. Catálogo	Descarga, normalización y validación del dataset; snapshot comprimido	Reingestar dos veces produce el mismo hash
-2. Modelado offline	EDA, features, baselines, RF, AdaBoost y evaluación	make train genera modelos y manifiesto
-3. Dominio	performance, experiments, attribution, budget	Pruebas unitarias de casos conocidos
-4. Plataforma	Snapshot, caché, memory store, SQLite opcional, PostgreSQL opcional y workflows	La app funciona sin DB y localmente con SQLite
-5. Frontend	Dashboard, páginas analíticas, formularios y gráficos	Todas las páginas consumen la API
-6. Despliegue temprano	Primer deploy Vercel en memory mode	URL pública y /status funcional
-7. Cierre	Cobertura, README, diagrama y ensayo	Demo de cinco minutos y Definition of Done
+13. Estado del proyecto
+
+**Hecho (backend y datos)**
+
+- Repositorio, `Makefile`, CI en GitHub Actions, Python 3.12 + uv, FastAPI `/v1` y OpenAPI.
+- Descarga Kaggle (`make download`), ingest con limpieza y snapshot, entrenamiento offline (`make train`), manifiesto y modelos en `backend/snapshot/`.
+- Módulos y workflows: KPIs, segmentos, ROI, modelos, A/B (Holm + bayesiano), atribución A/B, recomendador con idempotencia, `/status`, sync best-effort.
+- Memoria por defecto; SQLite opcional para recomendaciones; tests con cobertura ≥80 %.
+
+**Pendiente (producto)**
+
+- **Frontend:** implementar las pantallas y el shell descritos en [frontend/FRONTEND.md](./frontend/FRONTEND.md) (consumo de la API, tokens, estados honestos). El scaffold Next.js ya existe; no hay dashboard.
+
+**Opcional (no bloquea el backend local)**
+
+- Deploy público en Vercel (memory mode).
+- PostgreSQL en producción.
+- Notebook EDA ejecutado y narrativa para informe (`notebooks/01_eda.ipynb`).
 
 
 14. Cómo usar IA para desarrollar sin perder el control
@@ -636,26 +644,10 @@ Además:
 - Prueba de fallo de DB y reporte de persistencia temporal.
 - Verificación del tamaño de artefactos y dependencias de serving.
 No hacer que el CI dependa de credenciales de producción. PostgreSQL puede levantarse como servicio de CI solo para esa suite.
-16. Definition of Done
-- [ ] Next.js y FastAPI funcionan localmente.
-- [ ] El frontend consume el contrato OpenAPI mediante cliente TypeScript.
-- [ ] make train genera snapshot, modelos y manifiesto.
-- [ ] RF y AdaBoost se evalúan contra baselines con CV, calibración e intervalos.
-- [ ] ROI incluye sensibilidad y aclara el supuesto de ingreso por conversión.
-- [ ] A/B incluye análisis frecuentista y bayesiano y se identifica como observacional.
-- [ ] Atribución Nivel A funciona con factores reales disponibles.
-- [ ] Atribución Nivel B se identifica claramente como simulada.
-- [ ] Recomendador respeta restricciones y muestra incertidumbre.
-- [ ] Los módulos respetan las reglas de importación.
-- [ ] La aplicación funciona sin DB en memory mode.
-- [ ] La aplicación funciona con SQLite local.
-- [ ] PostgreSQL funciona cuando se configura, sin ser requisito.
-- [ ] La UI distingue datos temporales de datos persistidos.
-- [ ] La demo está desplegada en Vercel sin servicios externos obligatorios.
-- [ ] /status muestra snapshot, caché y estado de persistencia.
-- [ ] Cobertura de backend igual o superior al 80%.
-- [ ] README contiene instrucciones locales, arquitectura y decisiones.
-- [ ] Demo de cinco minutos ensayada.
+16. Definition of Done (resumen)
+
+Cierre **backend:** cumplido (ver §13). Cierre **producto completo:** falta el frontend según `frontend/FRONTEND.md` (Definition of Done de interfaz en la sección 18 de ese archivo).
+
 17. Sustentación y hoja de vida
 Preguntas probables
 1. ¿Por qué un monolito modular y no microservicios?

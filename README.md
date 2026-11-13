@@ -6,9 +6,14 @@
 - Reglas para agentes/IA: [AGENTS.md](./AGENTS.md)
 - Metodología de datos: [docs/crisp-dm/README.md](./docs/crisp-dm/README.md)
 
-## Alcance
+## Estado
 
-**Desarrollo activo: backend**. `frontend/` es el scaffold oficial de Next.js (`create-next-app`) más [frontend/FRONTEND.md](./frontend/FRONTEND.md) (diseño + contrato API) — sin UI de dashboard aún.
+| Área | Estado |
+|------|--------|
+| Backend: API `/v1`, dominio, snapshot, `make ingest` / `train`, CI (ruff, mypy, pytest ≥80 %) | **Listo** |
+| Frontend: dashboard y pantallas analíticas | **Pendiente** — guía [frontend/FRONTEND.md](./frontend/FRONTEND.md); hoy solo scaffold `create-next-app` |
+
+Lo demás (deploy Vercel, PostgreSQL en producción, EDA en notebook) es opcional y no bloquea desarrollo local.
 
 | Capa | Tecnología |
 |------|------------|
@@ -78,16 +83,7 @@ Modelos previstos en el pipeline offline (ver `make train`):
 
 No se usa `Total_Conversion` como feature (evitar data leakage).
 
-## Backend — checklist (API `/v1`)
-
-| Endpoint | Estado |
-|----------|--------|
-| health, status, kpis, segments, channels/compare, predict | ✅ |
-| roi, models (manifest), ab-test (Holm + bayesiano + bootstrap) | ✅ |
-| attribution Shapley A + modelos sintéticos B | ✅ |
-| recommendations + Idempotency-Key + GET list | ✅ (memoria + SQLite opcional) |
-| admin/sync (outbox best-effort) | ✅ |
-| CRISP: download → quality → ingest → train | ✅ |
+API REST documentada en OpenAPI: `http://localhost:8000/docs` (prefijo `/v1`).
 
 ## Calidad (backend)
 
@@ -100,9 +96,7 @@ make lint && make format && make typecheck && make test
 
 - **ruff** (check + format), **mypy** en `src`, **pytest** con cobertura **≥ 80 %** en el paquete `pitaya` (`backend/pyproject.toml`).
 
-Artefactos de datos (CRISP fases 2–5): CSV en `data/raw/`, informe `backend/snapshot/quality_report.json`, snapshot `ads.csv.gz`, modelos en `backend/snapshot/models/` y `manifest.json` — detalle en [docs/crisp-dm/README.md](./docs/crisp-dm/README.md).
-
-Pendiente: deploy Vercel, PostgreSQL productivo, cliente OpenAPI en frontend.
+Artefactos de datos (CRISP fases 2–5): CSV en `data/raw/`, informe `backend/snapshot/quality_report.json`, snapshot `ads.csv.gz`, modelos en `backend/snapshot/models/` y `manifest.json` — detalle en [docs/crisp-dm/README.md](./docs/crisp-dm/README.md). Tests usan extracto real en `backend/tests/fixtures/` (ver su README).
 
 ## Licencia
 
