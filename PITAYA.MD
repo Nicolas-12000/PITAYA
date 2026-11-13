@@ -38,7 +38,7 @@ Predicción de conversión (Random Forest y AdaBoost)	modeling	Ambos modelos, ba
 Análisis de ROI	performance	KPIs con valor por conversión configurable y análisis de sensibilidad
 A/B testing	experiments	Análisis frecuentista y bayesiano, corrección de Holm y simulador
 Modelos de atribución	attribution	Nivel A: Shapley por factores con datos reales. Nivel B: trayectorias simuladas, identificadas como simuladas
-Dashboard de campañas	frontend/	Páginas Next.js con shadcn/ui y Recharts
+Dashboard de campañas	frontend/	Páginas Next.js con shadcn/ui y Recharts; guía en `frontend/FRONTEND.md`
 Recomendación de inversión	budget	Asignación marginal con retornos decrecientes y encogimiento bayesiano
 Comparación de canales	performance	Canal como dimensión extensible; el dataset actual permite comparar campañas y segmentos
 Aplicación web	frontend/ + backend/	Next.js como interfaz y FastAPI como API JSON
@@ -122,7 +122,7 @@ platform/ (adaptadores)
 Los módulos de dominio pueden importar librerías numéricas (pandas, numpy, scipy, scikit-learn). No pueden importar infraestructura (FastAPI, SQLAlchemy, Vercel ni platform/). El I/O se realiza a través de puertos.
 5.2 Estructura propuesta
 pitaya/
-├── frontend/
+├── frontend/              # FRONTEND.md (diseño + contrato API §0)
 │   ├── package.json
 │   ├── next.config.ts
 │   ├── app/

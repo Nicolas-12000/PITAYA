@@ -8,7 +8,7 @@
 
 ## Alcance
 
-**Desarrollo activo: backend**. `frontend/` es el scaffold oficial de Next.js (`create-next-app`) más guía en `ROUTES.md` — sin UI de dashboard aún.
+**Desarrollo activo: backend**. `frontend/` es el scaffold oficial de Next.js (`create-next-app`) más [frontend/FRONTEND.md](./frontend/FRONTEND.md) (diseño + contrato API) — sin UI de dashboard aún.
 
 | Capa | Tecnología |
 |------|------------|
@@ -61,7 +61,7 @@ backend/src/pitaya/
   orchestration/    # workflows
   platform/         # web, storage, cache
 docs/crisp-dm/      # fases y entregables
-frontend/           # Next.js (create-next-app) + ROUTES.md guía
+frontend/           # Next.js (create-next-app) + FRONTEND.md
 notebooks/          # EDA (fuera del runtime de serving)
 ```
 
@@ -89,7 +89,20 @@ No se usa `Total_Conversion` como feature (evitar data leakage).
 | admin/sync (outbox best-effort) | ✅ |
 | CRISP: download → quality → ingest → train | ✅ |
 
-Calidad: cobertura ≥80 %, ruff, mypy en CI — ver [docs/QUALITY.md](docs/QUALITY.md). Pendiente: deploy Vercel, PostgreSQL productivo, cliente OpenAPI en frontend.
+## Calidad (backend)
+
+Misma barra en local y en GitHub Actions (`.github/workflows/backend.yml`):
+
+```bash
+make install    # uv sync --all-extras
+make lint && make format && make typecheck && make test
+```
+
+- **ruff** (check + format), **mypy** en `src`, **pytest** con cobertura **≥ 80 %** en el paquete `pitaya` (`backend/pyproject.toml`).
+
+Artefactos de datos (CRISP fases 2–5): CSV en `data/raw/`, informe `backend/snapshot/quality_report.json`, snapshot `ads.csv.gz`, modelos en `backend/snapshot/models/` y `manifest.json` — detalle en [docs/crisp-dm/README.md](./docs/crisp-dm/README.md).
+
+Pendiente: deploy Vercel, PostgreSQL productivo, cliente OpenAPI en frontend.
 
 ## Licencia
 

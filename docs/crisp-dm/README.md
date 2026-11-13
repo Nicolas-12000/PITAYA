@@ -32,7 +32,7 @@ Mapa de la metodología **Cross-Industry Standard Process for Data Mining** a ar
 - Sin `Approved_Conversion`; duplicados por `ad_id`; reglas lógicas CTR/conversiones.
 - Artefacto: `backend/snapshot/quality_report.json` con conteos por motivo.
 
-**Calidad:** ver [QUALITY.md](../QUALITY.md) — CI con ruff, mypy, cobertura ≥80 %.
+**Calidad de código:** CI y local con `make lint`, `make typecheck`, `make test` (ruff, mypy, pytest ≥80 % cobertura) — ver README del repo.
 
 ## Próximos pasos del equipo
 
