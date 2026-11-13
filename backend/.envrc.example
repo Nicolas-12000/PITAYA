@@ -1,3 +1,0 @@
-# Opcional: direnv — activa el venv del proyecto al entrar en backend/
-# Copiar a .envrc y ejecutar: direnv allow
-source .venv/bin/activate

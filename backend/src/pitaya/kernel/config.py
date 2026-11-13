@@ -3,6 +3,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from pitaya.kernel.paths import repository_root
+
 # Stable hold-out: hash(ad_id) % 10 < TEST_FOLD_MODULO_THRESHOLD
 TEST_FOLD_MODULO = 10
 TEST_FOLD_MODULO_THRESHOLD = 2
@@ -29,7 +31,7 @@ INFLIGHT_FEATURE_COLUMNS = (
 
 class PitayaSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=repository_root() / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )

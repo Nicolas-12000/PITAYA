@@ -1,4 +1,4 @@
-.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture db-up db-down crisp-dm check-python-clean
+.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture db-up db-down crisp-dm
 
 BACKEND := backend
 UV := cd $(BACKEND) && uv
@@ -50,10 +50,6 @@ frontend-install:
 
 frontend-dev:
 	cd frontend && pnpm dev
-
-check-python-clean:
-	@! python3 -c "import fastapi" 2>/dev/null && echo "[check-python-clean] OK: fastapi no está en el Python del sistema" || (echo "[check-python-clean] FAIL: fastapi importable fuera del venv" >&2; exit 1)
-	@cd $(BACKEND) && uv run python -c "import fastapi; print('[check-python-clean] OK: fastapi en', fastapi.__file__)"
 
 download:
 	$(UV) run python -m pitaya.cli download
