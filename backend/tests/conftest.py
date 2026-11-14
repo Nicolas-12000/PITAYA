@@ -17,6 +17,10 @@ _FIXTURE_CSV = Path(__file__).resolve().parent / "fixtures" / "sample_ads.csv"
 def _session_snapshot(tmp_path_factory: pytest.TempPathFactory) -> Path:
     snap = tmp_path_factory.mktemp("pitaya_snapshot")
     os.environ["SNAPSHOT_DIR"] = str(snap)
+    # Aislar las pruebas del .env local (SQLite de desarrollo): memoria por defecto.
+    # Las pruebas de persistencia fijan su propia base temporal con monkeypatch.
+    os.environ["STORAGE_MODE"] = "memory"
+    os.environ["DATABASE_URL"] = ""
     get_settings.cache_clear()
 
     gz = snap / "ads.csv.gz"
