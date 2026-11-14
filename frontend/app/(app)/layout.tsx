@@ -25,7 +25,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <DemoModeBanner />
         </Suspense>
-        <main id="contenido" className="mx-auto w-full max-w-[1280px] flex-1 px-4 pt-6 pb-16 md:px-6 md:pt-8">
+        <main id="contenido" className="mx-auto w-full max-w-[1760px] flex-1 px-4 pt-6 pb-16 md:px-5 md:pt-8 xl:px-6">
           {children}
         </main>
       </div>
