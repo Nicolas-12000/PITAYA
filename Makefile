@@ -1,4 +1,4 @@
-.PHONY: help install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture db-up db-down crisp-dm
+.PHONY: help env install sync lint format typecheck test backend-dev frontend-install frontend-dev download train ingest verify-idempotent export-test-fixture db-up db-down crisp-dm
 
 BACKEND := backend
 UV := cd $(BACKEND) && uv
@@ -12,7 +12,8 @@ help:
 	@echo "  make format             ruff format"
 	@echo "  make typecheck          mypy src"
 	@echo "  make test               pytest"
-	@echo "  make backend-dev        uvicorn con reload (puerto 8000)"
+	@echo "  make env                Crear .env desde .env.example si no existe (SQLite local)"
+	@echo "  make backend-dev        uvicorn con reload (puerto 8000; crea .env si falta)"
 	@echo "  make frontend-install   pnpm install en frontend/"
 	@echo "  make frontend-dev       next dev (puerto 3000)"
 	@echo ""
@@ -42,7 +43,10 @@ typecheck:
 test:
 	$(UV) run pytest
 
-backend-dev:
+env:
+	@test -f .env || (cp .env.example .env && echo "[env] .env creado desde .env.example (STORAGE_MODE=sqlite)")
+
+backend-dev: env
 	cd $(BACKEND) && uv run uvicorn app.index:app --reload --port 8000
 
 frontend-install:

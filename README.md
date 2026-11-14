@@ -32,7 +32,8 @@ cd PITAYA
 
 # Backend (entorno aislado en backend/.venv)
 make install
-make backend-dev
+make env           # crea .env desde .env.example → STORAGE_MODE=sqlite (data/pitaya.db)
+make backend-dev   # también crea .env si falta; sin .env el backend arranca en modo memoria
 # → http://localhost:8000/v1/health
 # → http://localhost:8000/docs
 
