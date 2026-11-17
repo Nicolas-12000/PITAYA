@@ -120,11 +120,11 @@ export function PitayaMark({
   );
 }
 
-export function PitayaLockup({ size = 24, className }: { size?: number; className?: string }) {
+export function PitayaLockup({ size = 32, className }: { size?: number; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
       <PitayaMark size={size} decorative />
-      <span className="text-[17px] font-semibold lowercase tracking-[-0.04em] text-ink">pitaya</span>
+      <span className="text-[15px] leading-none font-semibold tracking-[0.14em] text-ink">PITAYA</span>
     </span>
   );
 }

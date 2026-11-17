@@ -31,8 +31,8 @@ export function Topbar() {
           <Menu className="size-5" strokeWidth={1.5} />
         </button>
         <nav aria-label="Migas de pan" className="flex min-w-0 items-center gap-1.5 text-[13px]">
-          <Link href="/" className="hidden text-ink-subtle hover:text-ink sm:inline">
-            pitaya
+          <Link href="/" className="hidden font-medium tracking-[0.12em] text-ink-subtle hover:text-ink sm:inline">
+            PITAYA
           </Link>
           <ChevronRight className="hidden size-3.5 text-ink-tertiary sm:inline" strokeWidth={1.5} aria-hidden />
           <span className="truncate text-ink" aria-current="page">

@@ -94,7 +94,7 @@ export function Sidebar() {
     >
       <div className={cn("flex h-14 items-center border-b border-hairline", collapsed ? "justify-center" : "px-5")}>
         <Link href="/" aria-label="PITAYA, ir al resumen" className="rounded-md">
-          {collapsed ? <PitayaMark size={28} decorative /> : <PitayaLockup size={28} />}
+          {collapsed ? <PitayaMark size={32} decorative /> : <PitayaLockup />}
         </Link>
       </div>
       <div className={cn("flex-1 overflow-y-auto py-5", collapsed ? "px-2" : "px-3")}>
