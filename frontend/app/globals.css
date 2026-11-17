@@ -97,8 +97,12 @@ body {
 @keyframes sweep { from { background-position: 200% 0 } to { background-position: -200% 0 } }
 
 /* ── Mascota (§20) ──────────────────────────────────────────── */
+.pitaya-bob { animation: pitaya-bob 3.6s ease-in-out infinite; }
+@keyframes pitaya-bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+.pitaya-leaves { transform-box: fill-box; transform-origin: center bottom; animation: pitaya-sway 4.8s ease-in-out infinite; }
+@keyframes pitaya-sway { 0%, 100% { transform: rotate(-2.5deg) } 50% { transform: rotate(2.5deg) } }
 .pitaya-eyes { transform-box: fill-box; transform-origin: center; animation: blink 5.5s infinite; }
-@keyframes blink { 0%, 94%, 100% { transform: scaleY(1) } 97% { transform: scaleY(0.1) } }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1) } 96% { transform: scaleY(0.12) } }
 .pitaya-hop { animation: hop 520ms cubic-bezier(0.2, 0, 0, 1) 1; }
 @keyframes hop { 40% { transform: translateY(-8%) } 100% { transform: none } }
 
@@ -114,7 +118,7 @@ body {
 @keyframes fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton, .pitaya-eyes, .pitaya-hop, .bar-grow, .fade-in { animation: none; }
+  .skeleton, .pitaya-eyes, .pitaya-hop, .pitaya-bob, .pitaya-leaves, .bar-grow, .fade-in { animation: none; }
   .fig-draw polygon, .fig-draw path, .fig-draw line { animation: none; stroke-dashoffset: 0; }
   * { transition-duration: 0ms !important; }
 }

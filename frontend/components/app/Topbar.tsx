@@ -13,7 +13,7 @@ import { findNav } from "./nav";
 import { NavLinks } from "./Sidebar";
 import { ThemeToggle } from "./ThemeToggle";
 
-export function Topbar({ runBadge }: { runBadge: React.ReactNode }) {
+export function Topbar() {
   const pathname = usePathname();
   const current = findNav(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -21,7 +21,7 @@ export function Topbar({ runBadge }: { runBadge: React.ReactNode }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-hairline bg-canvas px-4 md:px-6">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-hairline bg-canvas px-4 md:px-6">
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
@@ -43,7 +43,7 @@ export function Topbar({ runBadge }: { runBadge: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setCmdOpen(true)}
-            className="hidden h-8 items-center gap-2 rounded-md border border-hairline bg-surface-1 pr-1.5 pl-3 text-[13px] text-ink-subtle hover:border-hairline-strong hover:text-ink md:inline-flex"
+            className="hidden h-9 items-center gap-2 rounded-md border border-hairline bg-surface-1 pr-1.5 pl-3 text-[13px] text-ink-subtle hover:border-hairline-strong hover:text-ink md:inline-flex"
           >
             Buscar o saltar a…
             <kbd className="inline-flex items-center gap-0.5 rounded-sm border border-hairline bg-surface-2 px-1.5 font-mono text-[11px] text-ink-subtle">
@@ -58,7 +58,6 @@ export function Topbar({ runBadge }: { runBadge: React.ReactNode }) {
           >
             <Command className="size-4" strokeWidth={1.5} />
           </button>
-          {runBadge}
           <ThemeToggle className="hidden sm:inline-flex" />
         </div>
       </header>

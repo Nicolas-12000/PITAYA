@@ -17,7 +17,7 @@ export default function AbPage() {
     <>
       <PageHeader
         title="Pruebas A/B entre campañas"
-        description="Pruebas de dos proporciones con corrección de Holm, posteriores Beta-Binomial y bootstrap del CPA, calculados por el backend."
+        description="Compara dos campañas con intervalo, corrección de Holm y una probabilidad de que una supere a la otra. No es un experimento aleatorio."
         eyebrow={<ObservationalNote />}
       />
       <Suspense fallback={<AbSkeleton />}>

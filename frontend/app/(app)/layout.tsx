@@ -1,6 +1,3 @@
-import { Suspense } from "react";
-
-import { DemoModeBanner, RunBadge, RunBadgeSkeleton } from "@/components/app/RunBadge";
 import { Sidebar } from "@/components/app/Sidebar";
 import { Topbar } from "@/components/app/Topbar";
 
@@ -15,17 +12,8 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </a>
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar
-          runBadge={
-            <Suspense fallback={<RunBadgeSkeleton />}>
-              <RunBadge />
-            </Suspense>
-          }
-        />
-        <Suspense fallback={null}>
-          <DemoModeBanner />
-        </Suspense>
-        <main id="contenido" className="mx-auto w-full max-w-[1760px] flex-1 px-4 pt-6 pb-16 md:px-5 md:pt-8 xl:px-6">
+        <Topbar />
+        <main id="contenido" className="mx-auto w-full max-w-440 flex-1 px-4 pt-6 pb-16 md:px-5 md:pt-8 xl:px-6">
           {children}
         </main>
       </div>

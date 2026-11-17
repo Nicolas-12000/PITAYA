@@ -59,7 +59,7 @@ export function AbExplorer({ data }: { data: AbTestResponse }) {
         <>
           <Panel className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="w-6 font-mono text-[12px] text-ink-subtle">A</span>
+              <span className="w-6 font-mono text-xs text-ink-subtle">A</span>
               <Segmented
                 label="Campaña A"
                 value={a}
@@ -79,7 +79,7 @@ export function AbExplorer({ data }: { data: AbTestResponse }) {
               <ArrowLeftRight strokeWidth={1.5} />
             </Button>
             <div className="flex flex-wrap items-center gap-3">
-              <span className="w-6 font-mono text-[12px] text-ink-subtle">B</span>
+              <span className="w-6 font-mono text-xs text-ink-subtle">B</span>
               <Segmented
                 label="Campaña B"
                 value={b}
@@ -88,7 +88,7 @@ export function AbExplorer({ data }: { data: AbTestResponse }) {
               />
             </div>
             <div className="flex items-center gap-3 lg:ml-auto">
-              <span className="text-[12px] text-ink-subtle">Métrica</span>
+              <span className="text-xs text-ink-subtle">Métrica</span>
               <Segmented
                 label="Métrica"
                 value={metric}
@@ -231,7 +231,7 @@ function RateComparison({ data, a, b, metric }: { data: AbTestResponse; a: strin
         </ChartFrame>
       ) : (
         <Notice>
-          Las posteriores bayesianas del backend se calculan sobre el CVR (aprobadas / clics). Cambia a CVR para verlas.
+          La probabilidad posterior se calcula sobre la tasa de conversión (aprobadas / clics). Cambia a CVR para verla.
         </Notice>
       )}
     </>
@@ -325,7 +325,7 @@ function ForestPlot({
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex justify-between font-mono text-[11px] text-ink-tertiary tabular sm:mr-[232px] sm:ml-[84px]">
+      <div className="mt-3 flex justify-between font-mono text-[11px] text-ink-tertiary tabular sm:mr-58 sm:ml-21">
         <span>{fmt(lo)}</span>
         <span>{fmt(hi)}</span>
       </div>
@@ -338,7 +338,7 @@ function SummaryTable({ data, highlight }: { data: AbTestResponse; highlight: st
     <Panel className="overflow-hidden">
       <PanelHeader title="Resumen por campaña" subtitle="Datos agregados de las tres campañas del snapshot." />
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-[13px]">
+        <table className="w-full min-w-140 text-[13px]">
           <thead>
             <tr className="border-y border-hairline text-ink-subtle">
               <th scope="col" className="px-5 py-2.5 text-left font-medium">Campaña</th>
@@ -398,9 +398,8 @@ function Simulator({ data }: { data: AbTestResponse }) {
           <Stat label="Tasa objetivo" value={formatRate(s.target_rate)} />
         </dl>
         <div className="border-t border-hairline px-5 py-4 text-[13px] text-ink-muted">
-          Supuestos del backend: α = <span className="font-mono">{formatDecimal(s.assumption_alpha, 2)}</span> (dos colas),
-          potencia = <span className="font-mono">{formatPercent(s.assumption_power, 0)}</span>, aproximación normal para dos
-          proporciones. La tasa base es el CTR de la primera campaña seleccionada en el backend.
+          Significancia {formatDecimal(s.assumption_alpha, 2)} (dos colas) y potencia {formatPercent(s.assumption_power, 0)}. La tasa
+          base es el CTR de la primera campaña elegida.
         </div>
       </Panel>
       <Notice title="Qué significa.">

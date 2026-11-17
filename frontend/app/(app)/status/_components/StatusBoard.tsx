@@ -7,8 +7,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { KpiCard } from "@/components/data/KpiCard";
-import { IsoBox } from "@/components/illustrations/Iso";
-import { Notice } from "@/components/notices/notices";
 import { Button } from "@/components/ui/button";
 import { Badge, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ConfirmDialog } from "@/components/ui/sheet";
@@ -16,7 +14,6 @@ import { apiFetch, apiPost, toUserMessage } from "@/lib/api/client";
 import type { ModelManifest, StatusResponse, SyncResponse } from "@/lib/api/types";
 import { formatDateTime, formatInteger, shortHash } from "@/lib/format";
 import { STORAGE_LABEL } from "@/lib/labels";
-import { cn } from "@/lib/utils";
 
 export function StatusBoard({
   initialStatus,
@@ -44,7 +41,7 @@ export function StatusBoard({
     onSuccess: (res) => {
       setLastSync({ at: new Date(), flushed: res.flushed });
       toast.success(
-        res.flushed ? `Sincronización lista: ${formatInteger(res.flushed)} elemento(s) del outbox.` : "No había nada pendiente en el outbox.",
+        res.flushed ? `Listo: se guardaron ${formatInteger(res.flushed)}.` : "No había nada pendiente.",
       );
       status.refetch();
       router.refresh();
@@ -61,7 +58,7 @@ export function StatusBoard({
         <KpiCard
           label="Persistencia"
           value={STORAGE_LABEL[s.storage_mode] ?? s.storage_mode}
-          note={durable ? "Escrituras duraderas en la misma petición" : "Solo memoria: se pierde al reiniciar"}
+          note={durable ? "Lo que guardas se escribe en la base al momento" : "Solo dura mientras esta sesión siga abierta"}
           footer={
             <Badge tone={durable ? "success" : "warning"} dot>
               {durable ? "Persistido" : "Temporal"}
@@ -72,30 +69,29 @@ export function StatusBoard({
           label="Salud de la API"
           value={healthy ? "En línea" : "Sin respuesta"}
           tone={healthy ? "positive" : "negative"}
-          note={status.isFetching ? "Sondeo cada 15 s · actualizando…" : status.isError ? "Sondeo cada 15 s · último intento falló" : "Sondeo cada 15 s · al día"}
+          note={status.isFetching ? "Revisando…" : status.isError ? "No pudimos revisar el servicio" : "Se revisa cada 15 segundos"}
         />
         <KpiCard
           label="Caché de lecturas"
           value={formatInteger(s.cache.entries)}
-          note={`de ${formatInteger(s.cache.max_items)} entradas · TTL ${formatInteger(s.cache.ttl_seconds / 60)} min`}
+          note={`de ${formatInteger(s.cache.max_items)} posibles · se renuevan cada ${formatInteger(s.cache.ttl_seconds / 60)} min`}
         />
         <KpiCard
           label="Memoria del proceso"
           value={formatInteger(s.memory_store_entries)}
-          note="Entradas en MemoryStore (temporales)"
+          note="Datos temporales de esta sesión"
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Panel className="rounded-xl">
           <PanelHeader
-            eyebrow={<p className="label-mono text-ink-tertiary">Run servido</p>}
-            title={s.snapshot.loaded ? "Snapshot cargado" : "No hay snapshot"}
-            subtitle="Hashes SHA-256 del dataset y del manifiesto de modelos."
+            title={s.snapshot.loaded ? "Datos listos" : "No hay datos cargados"}
+            subtitle="Sirve para ver si los modelos se entrenaron con los datos que estás consultando."
           />
           <dl className="mt-4 divide-y divide-hairline border-t border-hairline text-[13px]">
-            <HashRow label="dataset_hash (snapshot)" value={s.snapshot.dataset_hash} />
-            <HashRow label="dataset_hash (manifiesto)" value={manifest?.dataset_hash ?? null} />
+            <HashRow label="Datos actuales" value={s.snapshot.dataset_hash} />
+            <HashRow label="Datos del entrenamiento" value={manifest?.dataset_hash ?? null} />
             <Row label="Coherencia">
               {hashMatch === null ? (
                 <span className="text-ink-subtle">—</span>
@@ -105,7 +101,7 @@ export function StatusBoard({
                 </Badge>
               ) : (
                 <Badge tone="danger" dot>
-                  Modelos de otro snapshot: ejecuta make train
+                  Los modelos no coinciden con los datos actuales
                 </Badge>
               )}
             </Row>
@@ -123,44 +119,50 @@ export function StatusBoard({
               ) : null}
             </Row>
             <Row label="Base de datos">
-              {s.persistence.database_configured ? "DATABASE_URL configurada" : "Sin DATABASE_URL"}
+              {s.persistence.database_configured ? "Conectada" : "Sin conexión"}
             </Row>
           </dl>
         </Panel>
 
-        <Panel className="rounded-xl">
+        <Panel className="flex h-full flex-col rounded-xl">
           <PanelHeader
             eyebrow={<p className="label-mono text-ink-tertiary">Sincronización</p>}
-            title="Outbox de escrituras pendientes"
-            subtitle="Si una recomendación no se pudo persistir, queda en el outbox en memoria. Sincronizar lo vacía (best effort)."
+            title="Sincronización"
+            subtitle="Si una recomendación no alcanzó a guardarse, este botón vuelve a intentarlo."
           />
-          <div className="space-y-4 px-5 pt-5 pb-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="primary" onClick={() => setConfirm(true)} disabled={sync.isPending}>
-                <RefreshCw strokeWidth={1.5} className={sync.isPending ? "animate-spin" : undefined} />
-                {sync.isPending ? "Sincronizando…" : "Sincronizar ahora"}
-              </Button>
-              <span className="text-[13px] text-ink-subtle" aria-live="polite">
-                {lastSync
-                  ? `Último sync ${lastSync.at.toLocaleTimeString("es-CO")} · ${formatInteger(lastSync.flushed)} elemento(s)`
-                  : "Sin sincronizar en esta sesión"}
+          <p className="px-5 pt-4 text-[15px] leading-relaxed text-ink-muted text-pretty">
+            Cada recomendación se guarda al calcularla. Este cuadro no lista el historial: solo reintenta las que se quedaron a medias
+            porque la base no respondió en ese momento.
+          </p>
+          <dl className="mt-4 divide-y divide-hairline border-t border-hairline text-[13px]">
+            <Row label="En espera">
+              <span aria-live="polite">
+                {(s.persistence.outbox_pending ?? 0) === 0
+                  ? "Nada. Lo que calculas queda escrito al momento."
+                  : `${formatInteger(s.persistence.outbox_pending ?? 0)} por guardar`}
               </span>
-            </div>
-            <Notice>
-              La API no publica el conteo del outbox en <code className="font-mono">/v1/status</code>; el número aparece al
-              sincronizar. En Vercel no hay workers ni timers: la sincronización es siempre manual o en la misma petición.
-            </Notice>
+            </Row>
+            <Row label="Último intento">
+              {lastSync
+                ? `${lastSync.at.toLocaleTimeString("es-CO")} · ${formatInteger(lastSync.flushed)} guardada${lastSync.flushed === 1 ? "" : "s"}`
+                : "Todavía no se ha usado en esta visita"}
+            </Row>
+            <Row label="Cuándo usarlo">Cuando una recomendación avisa que quedó solo en esta sesión.</Row>
+          </dl>
+          <div className="mt-auto flex justify-center px-5 py-5">
+            <Button variant="primary" onClick={() => setConfirm(true)} disabled={sync.isPending}>
+              <RefreshCw strokeWidth={1.5} className={sync.isPending ? "animate-spin" : undefined} />
+              {sync.isPending ? "Sincronizando…" : "Sincronizar ahora"}
+            </Button>
           </div>
         </Panel>
       </div>
 
-      <LayersDiagram mode={s.storage_mode} />
-
       <ConfirmDialog
         open={confirm}
         onOpenChange={setConfirm}
-        title="¿Sincronizar el outbox ahora?"
-        description="Se vaciarán los elementos pendientes en memoria del backend. Es seguro repetirlo."
+        title="¿Reintentar lo que no se guardó?"
+        description="Se volverán a guardar en la base las recomendaciones que quedaron solo en memoria."
         confirmLabel="Sincronizar"
         onConfirm={() => sync.mutate()}
       />
@@ -196,7 +198,7 @@ function HashRow({ label, value }: { label: string; value: string | null }) {
               })
               .catch(() => toast.error("No pudimos copiar al portapapeles."))
           }
-          className="ml-2 inline-flex h-7 items-center gap-1 rounded-sm px-1.5 text-[12px] text-ink-subtle hover:bg-surface-2 hover:text-ink"
+          className="ml-2 inline-flex h-7 items-center gap-1 rounded-sm px-1.5 text-xs text-ink-subtle hover:bg-surface-2 hover:text-ink"
           aria-label={`Copiar ${label}`}
         >
           {copied ? <Check className="size-3.5 text-success-ink" strokeWidth={1.5} /> : <Copy className="size-3.5" strokeWidth={1.5} />}
@@ -204,68 +206,5 @@ function HashRow({ label, value }: { label: string; value: string | null }) {
         </button>
       ) : null}
     </Row>
-  );
-}
-
-const LAYERS = [
-  {
-    id: "L1",
-    title: "Memoria y caché",
-    text: "MemoryStore y caché TTL del proceso. Rápidas y temporales: se pierden al reiniciar.",
-    active: () => true,
-  },
-  {
-    id: "L2",
-    title: "Base de datos",
-    text: "SQLite en local o PostgreSQL opcional. Las recomendaciones se persisten en la misma petición.",
-    active: (mode: string) => mode === "sqlite" || mode === "postgres",
-  },
-  {
-    id: "L3",
-    title: "Snapshot",
-    text: "ads.csv.gz, manifest.json y modelos .joblib en backend/snapshot. Inmutable; se regenera offline.",
-    active: () => true,
-  },
-];
-
-function LayersDiagram({ mode }: { mode: string }) {
-  return (
-    <Panel className="rounded-xl">
-      <PanelHeader
-        eyebrow={<p className="label-mono text-ink-tertiary">FIG 0.4 · Niveles de almacenamiento</p>}
-        title={`Hoy la app lee del snapshot (L3) y escribe en ${mode === "memory" ? "memoria (L1)" : `${STORAGE_LABEL[mode] ?? mode} (L2)`}`}
-        subtitle="Los niveles apagados no participan en el modo actual."
-      />
-      <div className="grid gap-0 md:grid-cols-3 md:divide-x md:divide-hairline max-md:divide-y max-md:divide-hairline">
-        {LAYERS.map((layer, i) => {
-          const on = layer.active(mode);
-          return (
-            <figure key={layer.id} className={cn("flex flex-col gap-3 p-5", !on && "opacity-45")}>
-              <div className="flex items-center gap-2">
-                <span className="label-mono text-ink-tertiary">{layer.id}</span>
-                {on ? (
-                  <Badge tone="success" dot>
-                    activo
-                  </Badge>
-                ) : (
-                  <Badge>inactivo</Badge>
-                )}
-              </div>
-              <div className="dot-grid flex h-36 items-center justify-center rounded-lg border border-hairline bg-canvas">
-                <svg viewBox="-110 -70 220 150" aria-hidden className="fig-draw h-28 w-auto">
-                  {Array.from({ length: i + 1 }, (_, k) => (
-                    <IsoBox key={k} x={-40} y={-40} z={k * 18 - 10} w={80} d={80} h={12} accent={on && k === i} />
-                  ))}
-                </svg>
-              </div>
-              <figcaption>
-                <p className="text-[14px] font-medium text-ink">{layer.title}</p>
-                <p className="mt-1 text-[13px] text-ink-muted text-pretty">{layer.text}</p>
-              </figcaption>
-            </figure>
-          );
-        })}
-      </div>
-    </Panel>
   );
 }

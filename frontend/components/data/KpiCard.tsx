@@ -61,7 +61,7 @@ export function KpiCard({
       >
         {value}
       </p>
-      {note ? <p className="mt-2 text-[12px] text-ink-subtle">{note}</p> : null}
+      {note ? <p className="mt-2 text-xs text-ink-subtle">{note}</p> : null}
       {footer ? <div className="mt-auto pt-4">{footer}</div> : null}
     </article>
   );
@@ -77,7 +77,7 @@ export function MiniBars({
   return (
     <ul className="space-y-1.5" aria-label="Desglose por campaña">
       {items.map((item) => (
-        <li key={item.label} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 text-[12px]">
+        <li key={item.label} className="grid grid-cols-[44px_1fr_auto] items-center gap-2 text-xs">
           <span className="font-mono text-ink-subtle tabular">{item.label}</span>
           <span className="h-1.5 overflow-hidden rounded-full bg-surface-2">
             <span

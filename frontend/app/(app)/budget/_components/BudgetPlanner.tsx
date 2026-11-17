@@ -1,12 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calculator, Save } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { StackedBar } from "@/components/charts/BarList";
-import { DrawnCheck } from "@/components/illustrations/DrawnCheck";
 import { PitayaMark } from "@/components/illustrations/PitayaMark";
 import { Notice } from "@/components/notices/notices";
 import { EmptyState } from "@/components/states/states";
@@ -15,12 +14,21 @@ import { Field, Input } from "@/components/ui/controls";
 import { Badge, Panel, PanelHeader, Stat } from "@/components/ui/primitives";
 import { apiFetch, apiPost, toFieldErrors, toUserMessage } from "@/lib/api/client";
 import type { CampaignRow, RecommendationsList, RecommendRequest, RecommendResponse } from "@/lib/api/types";
-import { formatCurrency, formatDecimal, formatInteger, formatPercent, shortHash } from "@/lib/format";
+import { formatCurrency, formatDecimal, formatInteger, formatPercent } from "@/lib/format";
 import { genderLabel } from "@/lib/labels";
-import { useIdempotencyKey } from "@/lib/hooks/useIdempotencyKey";
 import { CAMPAIGN_IDS, campaignColor } from "@/lib/palette";
+import { cn } from "@/lib/utils";
 
 const CELEBRATED = "pitaya:celebrated";
+
+function requestKey(req: RecommendRequest): string {
+  return `budget:${req.total_budget}:${req.min_share ?? 0}:${req.max_share ?? 1}`;
+}
+
+function sharePercent(share: number | undefined, fallback: string): string {
+  if (typeof share !== "number" || Number.isNaN(share)) return fallback;
+  return String(Math.round(share * 1000) / 10);
+}
 
 const UNCERTAINTY_NOTE: Record<string, string> = {
   point_estimate_from_shrunk_cvr_and_concave_spend_curve:
@@ -43,7 +51,9 @@ export function BudgetPlanner({
   const [maxShare, setMaxShare] = useState("100");
   const [showAll, setShowAll] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
-  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [opened, setOpened] = useState<{ key: string; plan: RecommendResponse["plan"]; req: RecommendRequest } | null>(
+    null,
+  );
 
   const body: RecommendRequest = {
     total_budget: Number(budget),
@@ -61,16 +71,16 @@ export function BudgetPlanner({
   const valid = Object.keys(localErrors).length === 0;
 
   const calc = useMutation({
-    mutationFn: (req: RecommendRequest) => apiPost<RecommendResponse>("v1/recommendations", req),
-  });
-  const lastBody = calc.variables;
-  const key = useIdempotencyKey(lastBody ?? null);
-
-  const save = useMutation({
-    mutationFn: (req: RecommendRequest) => apiPost<RecommendResponse>("v1/recommendations", req, key),
-    onSuccess: (res) => {
-      setSavedKey(key);
-      toast.success(res.persisted ? "Recomendación guardada." : "Recomendación guardada en memoria (sin persistir).");
+    mutationFn: (req: RecommendRequest) => apiPost<RecommendResponse>("v1/recommendations", req, requestKey(req)),
+    onSuccess: (res, req) => {
+      setOpened({ key: requestKey(req), plan: res.plan, req });
+      toast.success(
+        res.created === false
+          ? "Mismos parámetros: quedó como la más reciente."
+          : res.persisted
+            ? "Quedó en el historial."
+            : "Quedó en el historial de esta sesión.",
+      );
       try {
         if (sessionStorage.getItem(CELEBRATED) !== "1") {
           sessionStorage.setItem(CELEBRATED, "1");
@@ -83,7 +93,6 @@ export function BudgetPlanner({
     },
     onError: (err) => toast.error(toUserMessage(err)),
   });
-
   const history = useQuery({
     queryKey: ["recommendations"],
     queryFn: () => apiFetch<RecommendationsList>("v1/recommendations"),
@@ -91,8 +100,19 @@ export function BudgetPlanner({
   });
 
   const serverErrors = toFieldErrors(calc.error);
-  const plan = calc.data?.plan;
-  const dirty = !lastBody || JSON.stringify(lastBody) !== JSON.stringify(body);
+  const plan = opened?.plan;
+  const dirty = opened !== null && JSON.stringify(opened.req) !== JSON.stringify(body);
+
+  function openHistory(item: RecommendationsList["items"][number]) {
+    const min = item.payload.min_share ?? 0;
+    const max = item.payload.max_share ?? 1;
+    const req: RecommendRequest = { total_budget: item.payload.total_budget, min_share: min, max_share: max };
+    setBudget(String(item.payload.total_budget));
+    setMinShare(sharePercent(item.payload.min_share, "0"));
+    setMaxShare(sharePercent(item.payload.max_share, "100"));
+    setOpened({ key: item.idempotency_key, plan: item.payload, req });
+    setShowAll(false);
+  }
   const suspicious = plan?.allocations.filter((a) => a.shrunk_cvr > 1).length ?? 0;
 
   const totalSpent = campaigns.reduce((a, c) => a + c.kpis.spent, 0);
@@ -119,11 +139,7 @@ export function BudgetPlanner({
             noValidate
             onSubmit={(e) => {
               e.preventDefault();
-              if (valid) {
-                setSavedKey(null);
-                setCelebrate(false);
-                calc.mutate(body);
-              }
+              if (valid) calc.mutate(body);
             }}
             className="space-y-5"
           >
@@ -161,27 +177,13 @@ export function BudgetPlanner({
                 />
               </Field>
             </div>
-            <p className="text-[12px] text-ink-tertiary">
-              La API acepta límites globales por segmento; restricciones individuales (excluir un segmento) aún no están
-              disponibles.
-            </p>
             <div className="flex flex-col gap-2">
               <Button type="submit" variant="primary" disabled={!valid || calc.isPending}>
                 <Calculator strokeWidth={1.5} />
                 {calc.isPending ? "Calculando…" : "Calcular"}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={!plan || dirty || save.isPending || savedKey === key}
-                onClick={() => lastBody && save.mutate(lastBody)}
-                title={dirty && plan ? "Cambiaste los parámetros: vuelve a calcular antes de guardar" : undefined}
-              >
-                {savedKey === key ? <DrawnCheck size={16} /> : <Save strokeWidth={1.5} />}
-                {save.isPending ? "Guardando…" : savedKey === key ? "Guardada" : "Guardar recomendación"}
-              </Button>
               {plan && dirty ? (
-                <p className="text-[12px] text-warning-ink">Los parámetros cambiaron: vuelve a calcular.</p>
+                <p className="text-xs text-warning-ink">Cambiaste el presupuesto. Calcula de nuevo para actualizar el historial.</p>
               ) : null}
             </div>
           </form>
@@ -207,10 +209,10 @@ export function BudgetPlanner({
               {celebrate ? (
                 <Panel className="fade-in flex items-center gap-4 p-4">
                   <PitayaMark mood="celebrate" size={56} decorative />
-                  <p className="text-[14px] text-ink">
+                  <p className="text-sm text-ink">
                     Primera recomendación guardada de la sesión.{" "}
                     <span className="text-ink-muted">
-                      {save.data?.persisted ? "Quedó persistida en la base de datos." : "Quedó solo en memoria del backend."}
+                      {calc.data?.persisted ? "Quedó guardada." : "Quedó solo en esta sesión."}
                     </span>
                   </p>
                 </Panel>
@@ -241,14 +243,14 @@ export function BudgetPlanner({
                 </Notice>
               ) : null}
               <Notice>
-                {UNCERTAINTY_NOTE[plan.uncertainty_note] ?? "Punto estimado."} El backend aún no entrega intervalos para el
-                reparto; trátalo como orientación, no como garantía.
+                {UNCERTAINTY_NOTE[plan.uncertainty_note] ?? "Punto estimado."} Es una orientación a partir del histórico, no una
+                garantía.
               </Notice>
 
               <Panel className="overflow-hidden">
                 <PanelHeader title="Detalle por segmento" subtitle="Ordenado por gasto recomendado." />
                 <div className="mt-4 overflow-x-auto">
-                  <table className="w-full min-w-[680px] text-[13px]">
+                  <table className="w-full min-w-170 text-[13px]">
                     <thead>
                       <tr className="border-y border-hairline text-ink-subtle">
                         <th scope="col" className="px-5 py-2.5 text-left font-medium">Segmento</th>
@@ -309,49 +311,64 @@ export function BudgetPlanner({
 
       <Panel>
         <PanelHeader
-          title="Historial de recomendaciones"
+          title="Historial"
           subtitle={
             storageMode === "memory"
-              ? "Modo memoria: el historial vive en el proceso del backend y se pierde al reiniciarlo."
-              : "Guardadas con Idempotency-Key: reenviar el mismo cuerpo no duplica registros."
+              ? "Cada cálculo queda aquí mientras esta sesión siga abierta."
+              : "Cada cálculo queda guardado. Si repites el mismo presupuesto, no se duplica."
           }
           actions={
             pending ? (
               <Badge tone="warning" dot>
-                {formatInteger(pending)} sin persistir
+                {formatInteger(pending)} por confirmar
               </Badge>
             ) : history.data.items.length ? (
               <Badge tone="success" dot>
-                Todo persistido
+                {formatInteger(history.data.items.length)} guardada{history.data.items.length === 1 ? "" : "s"}
               </Badge>
             ) : null
           }
         />
         {history.data.items.length === 0 ? (
-          <p className="px-5 pt-3 pb-5 text-[13px] text-ink-subtle">Todavía no hay recomendaciones guardadas en esta instancia.</p>
+          <EmptyState title="Todavía no hay recomendaciones" mood="thinking">
+            Calcula un presupuesto y aparecerá aquí, con el monto y las conversiones esperadas.
+          </EmptyState>
         ) : (
-          <ul className="mt-3 divide-y divide-hairline border-t border-hairline">
-            {history.data.items.map((item) => (
-              <li key={item.idempotency_key} className="flex flex-wrap items-center gap-x-6 gap-y-1 px-5 py-3 text-[13px]">
-                <span className="font-mono text-ink-subtle">{shortHash(item.idempotency_key, 8)}</span>
-                <span className="font-mono text-ink tabular">{formatCurrency(item.payload.total_budget, 0)}</span>
-                <span className="text-ink-muted">
-                  {formatInteger(item.payload.allocations.length)} segmentos ·{" "}
-                  <span className="font-mono tabular">{formatDecimal(item.payload.expected_conversions, 1)}</span> conv. esperadas
-                </span>
-                <span className="ml-auto">
-                  {item.persisted ? (
-                    <Badge tone="success" dot>
-                      Guardada
-                    </Badge>
-                  ) : (
-                    <Badge tone="warning" dot>
-                      Solo en memoria
-                    </Badge>
-                  )}
-                </span>
-              </li>
-            ))}
+          <ul className="mt-3 max-h-80 divide-y divide-hairline overflow-y-auto border-t border-hairline">
+            {history.data.items.map((item, index) => {
+              const active = item.idempotency_key === opened?.key;
+              return (
+                <li key={item.idempotency_key}>
+                  <button
+                    type="button"
+                    onClick={() => openHistory(item)}
+                    className={cn(
+                      "flex w-full flex-wrap items-center gap-x-6 gap-y-1 px-5 py-4 text-left text-sm transition-colors duration-120 hover:bg-surface-2",
+                      active && "bg-surface-2",
+                    )}
+                  >
+                    <span className="w-6 font-mono text-xs text-ink-tertiary tabular">{index + 1}</span>
+                    <span className="font-mono text-ink tabular">{formatCurrency(item.payload.total_budget, 0)}</span>
+                    <span className="text-ink-muted">
+                      {formatInteger(item.payload.allocations.length)} segmentos ·{" "}
+                      <span className="font-mono tabular">{formatDecimal(item.payload.expected_conversions, 1)}</span> conversiones
+                      esperadas
+                    </span>
+                    <span className="ml-auto">
+                      {item.persisted ? (
+                        <Badge tone="success" dot>
+                          Guardada
+                        </Badge>
+                      ) : (
+                        <Badge tone="warning" dot>
+                          Solo en esta sesión
+                        </Badge>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </Panel>

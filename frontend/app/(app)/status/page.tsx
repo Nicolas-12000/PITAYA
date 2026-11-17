@@ -16,7 +16,7 @@ export default function StatusPage() {
     <>
       <PageHeader
         title="Estado del sistema"
-        description="Qué pasa por debajo: dónde se guardan los datos, qué snapshot y modelos se sirven y qué queda pendiente de sincronizar."
+        description="Dónde están guardados los datos, si los modelos coinciden y si queda algo por sincronizar."
       />
       <Suspense
         fallback={
@@ -26,7 +26,7 @@ export default function StatusPage() {
                 <KpiSkeleton key={i} />
               ))}
             </div>
-            <Skeleton className="mt-6 h-[360px] rounded-xl" />
+            <Skeleton className="mt-6 h-90 rounded-xl" />
           </Busy>
         }
       >
@@ -45,7 +45,7 @@ async function Status() {
   if (!status.ok) {
     return (
       <ErrorState
-        title="El backend no responde"
+        title="No pudimos consultar el estado"
         message={`${status.message} Comprueba BACKEND_URL en frontend/.env.local.`}
       />
     );

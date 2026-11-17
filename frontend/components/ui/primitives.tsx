@@ -52,7 +52,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[12px] leading-5 font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap",
         TONE[tone],
         className,
       )}
@@ -101,16 +101,16 @@ export function Stat({
 }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <dt className="text-[12px] text-ink-subtle">{label}</dt>
+      <dt className="text-xs text-ink-subtle">{label}</dt>
       <dd className="mt-1 font-mono text-[15px] text-ink tabular">{value}</dd>
-      {hint ? <dd className="mt-0.5 text-[12px] text-ink-tertiary">{hint}</dd> : null}
+      {hint ? <dd className="mt-0.5 text-xs text-ink-tertiary">{hint}</dd> : null}
     </div>
   );
 }
 
 export function Legend({ items }: { items: { label: ReactNode; color: string; dashed?: boolean }[] }) {
   return (
-    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-subtle">
+    <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-subtle">
       {items.map((item, i) => (
         <li key={i} className="inline-flex items-center gap-1.5">
           <span

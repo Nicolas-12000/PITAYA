@@ -91,10 +91,10 @@ export function PitayaMark({
       viewBox="0 0 128 128"
       width={size}
       height={size}
-      className={cn("pitaya shrink-0", mood === "celebrate" && "pitaya-hop", className)}
+      className={cn("pitaya shrink-0", mood === "celebrate" ? "pitaya-hop" : "pitaya-bob", className)}
       {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": "Pitaya, la mascota de PITAYA" })}
     >
-      <g className="fill-series-3">
+      <g className="fill-series-3 pitaya-leaves">
         <path d={CROWN} />
         {SIDE.map((d) => (
           <path key={d} d={d} />

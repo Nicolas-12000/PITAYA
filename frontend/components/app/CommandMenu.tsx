@@ -1,30 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
-import { Copy, Monitor, Moon, Search, Sun } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Dialog } from "radix-ui";
 import { useEffect } from "react";
-import { toast } from "sonner";
-
-import { apiFetch } from "@/lib/api/client";
-import type { StatusResponse } from "@/lib/api/types";
 
 import { NAV } from "./nav";
 
 const itemClass =
-  "flex h-10 cursor-pointer items-center gap-3 rounded-md px-3 text-[14px] text-ink-muted data-[selected=true]:bg-surface-2 data-[selected=true]:text-ink";
+  "flex h-10 cursor-pointer items-center gap-3 rounded-md px-3 text-sm text-ink-muted data-selected:bg-surface-2 data-selected:text-ink";
+
+const groupClass =
+  "**:[[cmdk-group-heading]]:label-mono **:[[cmdk-group-heading]]:px-3 **:[[cmdk-group-heading]]:pt-2 **:[[cmdk-group-heading]]:pb-1 **:[[cmdk-group-heading]]:text-ink-tertiary";
 
 export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
   const { setTheme } = useTheme();
-  const status = useQuery({
-    queryKey: ["status"],
-    queryFn: () => apiFetch<StatusResponse>("v1/status"),
-    enabled: open,
-  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -42,15 +35,13 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
     fn();
   };
 
-  const hash = status.data?.snapshot.dataset_hash;
-
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fade-in fixed inset-0 z-40 bg-canvas/60 backdrop-blur-[2px]" />
         <Dialog.Content className="fade-in fixed top-[12vh] left-1/2 z-50 w-[min(560px,92vw)] -translate-x-1/2 overflow-hidden rounded-lg border border-hairline-strong bg-surface-1 shadow-[0_24px_64px_-24px_rgb(0_0_0/0.5)]">
           <Dialog.Title className="sr-only">Paleta de comandos</Dialog.Title>
-          <Dialog.Description className="sr-only">Navega entre páginas, cambia el tema o copia el hash del run.</Dialog.Description>
+          <Dialog.Description className="sr-only">Navega entre páginas o cambia el tema.</Dialog.Description>
           <Command label="Paleta de comandos" loop>
             <div className="flex items-center gap-2 border-b border-hairline px-4">
               <Search className="size-4 text-ink-subtle" strokeWidth={1.5} aria-hidden />
@@ -67,7 +58,7 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
                 <Command.Group
                   key={group.label}
                   heading={group.label}
-                  className="[&_[cmdk-group-heading]]:label-mono [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-ink-tertiary"
+                  className={groupClass}
                 >
                   {group.items.map((item) => (
                     <Command.Item
@@ -78,39 +69,20 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
                     >
                       <item.icon className="size-4 text-ink-subtle" strokeWidth={1.5} />
                       <span className="text-ink">{item.label}</span>
-                      <span className="ml-auto truncate text-[12px] text-ink-tertiary max-sm:hidden">{item.description}</span>
+                      <span className="ml-auto truncate text-xs text-ink-tertiary max-sm:hidden">{item.description}</span>
                     </Command.Item>
                   ))}
                 </Command.Group>
               ))}
               <Command.Group
                 heading="Preferencias"
-                className="[&_[cmdk-group-heading]]:label-mono [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-ink-tertiary"
+                className={groupClass}
               >
                 <Command.Item onSelect={() => run(() => setTheme("light"))} className={itemClass}>
                   <Sun className="size-4" strokeWidth={1.5} /> Tema claro
                 </Command.Item>
                 <Command.Item onSelect={() => run(() => setTheme("dark"))} className={itemClass}>
                   <Moon className="size-4" strokeWidth={1.5} /> Tema oscuro
-                </Command.Item>
-                <Command.Item onSelect={() => run(() => setTheme("system"))} className={itemClass}>
-                  <Monitor className="size-4" strokeWidth={1.5} /> Tema del sistema
-                </Command.Item>
-                <Command.Item
-                  disabled={!hash}
-                  onSelect={() =>
-                    run(() => {
-                      if (!hash) return;
-                      navigator.clipboard
-                        .writeText(hash)
-                        .then(() => toast("Hash del dataset copiado."))
-                        .catch(() => toast.error("No pudimos copiar al portapapeles."));
-                    })
-                  }
-                  className={itemClass}
-                >
-                  <Copy className="size-4" strokeWidth={1.5} /> Copiar hash del dataset
-                  <span className="ml-auto font-mono text-[12px] text-ink-tertiary">{hash ? hash.slice(0, 7) : "—"}</span>
                 </Command.Item>
               </Command.Group>
             </Command.List>

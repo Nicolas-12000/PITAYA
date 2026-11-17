@@ -16,12 +16,12 @@ export default function WhatIfPage() {
     <>
       <PageHeader
         title="What-if: ¿convertirá este anuncio?"
-        description="Describe un anuncio y los modelos entrenados estiman la probabilidad de que logre al menos una conversión aprobada."
+        description="Estima si un anuncio lograría una conversión aprobada. Pre-lanzamiento usa solo la audiencia. En vuelo también usa impresiones, clics y gasto."
       />
       <Suspense
         fallback={
           <Busy className="grid gap-6 lg:grid-cols-[360px_1fr]">
-            <KpiSkeleton className="h-[520px]" />
+            <KpiSkeleton className="h-130" />
             <ChartSkeleton height={320} />
           </Busy>
         }
@@ -47,7 +47,7 @@ async function WhatIf() {
         interest: uniq(segs.map((s) => s.interest)).sort((a, b) => a - b),
       }}
       models={manifest ? manifest.models.map((m) => m.kind) : ["random_forest"]}
-      trainedScenario={manifest?.feature_scenario ?? null}
+      availableScenarios={manifest?.available_scenarios ?? (manifest ? [manifest.feature_scenario] : [])}
     />
   );
 }

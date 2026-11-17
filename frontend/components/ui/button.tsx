@@ -22,7 +22,7 @@ const SIZE: Record<Size, string> = {
 export function buttonClass(variant: Variant = "secondary", size: Size = "md", className?: string): string {
   return cn(
     "inline-flex shrink-0 select-none items-center justify-center rounded-md font-medium whitespace-nowrap",
-    "transition-[background-color,color,transform] duration-[120ms] ease-out-soft active:scale-[0.98]",
+    "transition-[background-color,color,transform] duration-120 ease-out-soft active:scale-[0.98]",
     "disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
     VARIANT[variant],
     SIZE[size],

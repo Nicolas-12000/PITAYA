@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { Notice } from "@/components/notices/notices";
 import { TableSkeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/states";
 import { PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -50,7 +49,7 @@ async function CampaignTable() {
         subtitle="ROAS ≥ 1× significa que el ingreso estimado cubre el gasto. Verde recupera la inversión; coral pierde dinero."
       />
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-[13px]">
+        <table className="w-full min-w-160 text-[13px]">
           <thead>
             <tr className="border-y border-hairline text-ink-subtle">
               <th scope="col" className="px-5 py-2.5 text-left font-medium">Campaña</th>
@@ -88,12 +87,6 @@ async function CampaignTable() {
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="p-5 pt-4">
-        <Notice>
-          El backend calcula la sensibilidad solo a nivel global; el ROI por campaña con otros valores por conversión aún no
-          está expuesto en la API.
-        </Notice>
       </div>
     </Panel>
   );

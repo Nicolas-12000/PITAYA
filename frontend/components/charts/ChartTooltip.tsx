@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 /** Tooltip de Recharts sobre surface-3 con borde hairline-strong (§13). */
 export function ChartTooltipBox({ title, rows }: { title?: ReactNode; rows: { label: ReactNode; value: ReactNode; color?: string }[] }) {
   return (
-    <div className="min-w-40 rounded-md border border-hairline-strong bg-surface-3 px-3 py-2 text-[12px] shadow-[0_8px_24px_-12px_rgb(0_0_0/0.35)]">
+    <div className="min-w-40 rounded-md border border-hairline-strong bg-surface-3 px-3 py-2 text-xs shadow-[0_8px_24px_-12px_rgb(0_0_0/0.35)]">
       {title ? <p className="mb-1 font-medium text-ink">{title}</p> : null}
       <ul className="space-y-0.5">
         {rows.map((r, i) => (

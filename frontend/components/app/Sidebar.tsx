@@ -37,7 +37,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
   const pathname = usePathname();
   const current = findNav(pathname)?.href;
   return (
-    <nav aria-label="Principal" className="flex flex-col gap-5">
+    <nav aria-label="Principal" className="flex flex-col gap-7">
       {NAV.map((group) => (
         <div key={group.label}>
           {collapsed ? (
@@ -45,7 +45,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
           ) : (
             <p className="label-mono mb-1.5 px-3 text-ink-tertiary">{group.label}</p>
           )}
-          <ul className="flex flex-col gap-0.5">
+          <ul className="flex flex-col gap-1">
             {group.items.map((item) => {
               const active = item.href === current;
               const Icon = item.icon;
@@ -57,7 +57,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
                     aria-current={active ? "page" : undefined}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "group relative flex h-9 items-center gap-3 rounded-md px-3 text-[14px] transition-colors duration-[120ms] max-lg:h-11",
+                      "group relative flex h-11 items-center gap-3 rounded-md px-3 text-[15px] transition-colors duration-120",
                       collapsed && "justify-center px-0",
                       active
                         ? "bg-primary-subtle text-ink"
@@ -71,7 +71,7 @@ export function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolea
                       className={cn("size-5 shrink-0", active ? "text-primary-text" : "text-ink-subtle group-hover:text-ink-muted")}
                       strokeWidth={1.5}
                     />
-                    {collapsed ? <span className="sr-only">{item.label}</span> : <span className="truncate">{item.label}</span>}
+                    {collapsed ? <span className="sr-only">{item.label}</span> : <span>{item.label}</span>}
                   </Link>
                 </li>
               );
@@ -89,15 +89,15 @@ export function Sidebar() {
     <aside
       className={cn(
         "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-hairline bg-canvas transition-[width] duration-200 ease-out-soft lg:flex",
-        collapsed ? "w-14" : "w-[232px]",
+        collapsed ? "w-16" : "w-72",
       )}
     >
-      <div className={cn("flex h-12 items-center border-b border-hairline", collapsed ? "justify-center" : "px-4")}>
+      <div className={cn("flex h-14 items-center border-b border-hairline", collapsed ? "justify-center" : "px-5")}>
         <Link href="/" aria-label="PITAYA, ir al resumen" className="rounded-md">
-          {collapsed ? <PitayaMark size={24} decorative /> : <PitayaLockup size={24} />}
+          {collapsed ? <PitayaMark size={28} decorative /> : <PitayaLockup size={28} />}
         </Link>
       </div>
-      <div className={cn("flex-1 overflow-y-auto py-4", collapsed ? "px-2" : "px-3")}>
+      <div className={cn("flex-1 overflow-y-auto py-5", collapsed ? "px-2" : "px-3")}>
         <NavLinks collapsed={collapsed} />
       </div>
       <div className={cn("border-t border-hairline p-2", collapsed && "flex justify-center")}>
@@ -106,7 +106,7 @@ export function Sidebar() {
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "Expandir barra lateral" : "Contraer barra lateral"}
           className={cn(
-            "inline-flex h-9 items-center gap-2 rounded-md px-3 text-[13px] text-ink-subtle hover:bg-surface-2 hover:text-ink",
+            "inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm text-ink-subtle hover:bg-surface-2 hover:text-ink",
             collapsed ? "w-9 justify-center px-0" : "w-full",
           )}
         >

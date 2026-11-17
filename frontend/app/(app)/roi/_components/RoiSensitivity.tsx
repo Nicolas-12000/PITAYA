@@ -60,7 +60,7 @@ export function RoiSensitivity({ data }: { data: RoiResponse }) {
               onClick={() => setIdx(i)}
               aria-pressed={i === idx}
               className={cn(
-                "rounded-sm px-1 py-1 font-mono text-[11px] tabular transition-colors duration-[120ms] max-md:py-2",
+                "rounded-sm px-1 py-1 font-mono text-[11px] tabular transition-colors duration-120 max-md:py-2",
                 i === idx ? "text-primary-text" : "text-ink-tertiary hover:text-ink",
               )}
             >
@@ -71,27 +71,26 @@ export function RoiSensitivity({ data }: { data: RoiResponse }) {
 
         <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-hairline pt-5" aria-live="polite">
           <div>
-            <dt className="text-[12px] text-ink-subtle">ROI</dt>
+            <dt className="text-xs text-ink-subtle">ROI</dt>
             <dd className={cn("mt-1 font-mono text-[22px] font-medium tabular", positive ? "text-success-ink" : "text-danger-ink")}>
               {formatSignedPercent(current.roi)}
             </dd>
           </div>
           <div>
-            <dt className="text-[12px] text-ink-subtle">ROAS</dt>
+            <dt className="text-xs text-ink-subtle">ROAS</dt>
             <dd className="mt-1 font-mono text-[22px] font-medium text-ink tabular">{formatRatio(current.roas)}</dd>
           </div>
           <div>
-            <dt className="text-[12px] text-ink-subtle">Ingreso estimado</dt>
+            <dt className="text-xs text-ink-subtle">Ingreso estimado</dt>
             <dd className="mt-1 font-mono text-[15px] text-ink tabular">{formatCurrency(current.estimated_revenue, 0)}</dd>
           </div>
           <div>
-            <dt className="text-[12px] text-ink-subtle">Gasto</dt>
+            <dt className="text-xs text-ink-subtle">Gasto</dt>
             <dd className="mt-1 font-mono text-[15px] text-ink tabular">{formatCurrency(data.spent, 0)}</dd>
           </div>
         </dl>
-        <p className="mt-auto pt-5 text-[12px] text-ink-tertiary">
-          Valores calculados por el backend para {scenarios.length} multiplicadores del valor base (
-          {formatCurrency(data.base_value_per_conversion)}). El valor base se configura con VALUE_PER_APPROVED_CONVERSION.
+        <p className="mt-auto pt-5 text-xs text-ink-tertiary">
+          {scenarios.length} escenarios a partir del valor base ({formatCurrency(data.base_value_per_conversion)}).
         </p>
       </Panel>
 
@@ -119,7 +118,7 @@ export function RoiSensitivity({ data }: { data: RoiResponse }) {
         }}
         minHeight={320}
       >
-        <div className="h-[300px] w-full">
+        <div className="h-75 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 16, right: 16, bottom: 8, left: 4 }}>
               <CartesianGrid {...GRID_PROPS} />

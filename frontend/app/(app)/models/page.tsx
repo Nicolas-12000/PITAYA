@@ -16,7 +16,7 @@ export default function ModelsPage() {
     <>
       <PageHeader
         title="Modelos de conversión"
-        description="Clasificadores que estiman si un anuncio logra al menos una conversión aprobada. Entrenados offline (make train) con validación cruzada de 5 folds y un conjunto de prueba aparte."
+        description="Clasificadores que estiman si un anuncio logra al menos una conversión aprobada. Se comparan con validación cruzada y un conjunto de prueba aparte."
       />
       <Suspense fallback={<ModelsSkeleton />}>
         <Models />
@@ -32,7 +32,7 @@ async function Models() {
     return (
       <div className="rounded-lg border border-hairline bg-surface-1">
         <EmptyState title="Aún no hay modelos entrenados" mood="sleepy">
-          Ejecuta <code className="font-mono">make train</code> en el backend para generar el manifiesto y los artefactos.
+          Todavía no hay modelos listos para consultar.
         </EmptyState>
       </div>
     );

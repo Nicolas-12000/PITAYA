@@ -11,7 +11,7 @@ export default function Loading() {
             <KpiSkeleton key={i} />
           ))}
         </div>
-        <Skeleton className="mt-6 h-[360px] rounded-xl" />
+        <Skeleton className="mt-6 h-90 rounded-xl" />
       </Busy>
     </>
   );

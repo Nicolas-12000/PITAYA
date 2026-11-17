@@ -5,7 +5,6 @@ import { Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { PitayaMark } from "@/components/illustrations/PitayaMark";
-import { Notice } from "@/components/notices/notices";
 import { EmptyState } from "@/components/states/states";
 import { Skeleton } from "@/components/states/Skeleton";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import { apiPost, toFieldErrors, toUserMessage } from "@/lib/api/client";
 import type { PredictRequest, PredictResponse } from "@/lib/api/types";
 import { formatPercent } from "@/lib/format";
 import { genderLabel, MODEL_LABEL } from "@/lib/labels";
-import { campaignColor } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 
 type Scenario = "inflight" | "prelaunch";
@@ -24,13 +22,15 @@ type Outcome = { kind: string; ok: true; p: number } | { kind: string; ok: false
 export function WhatIfForm({
   options,
   models,
-  trainedScenario,
+  availableScenarios,
 }: {
   options: { campaign: number[]; age: string[]; gender: string[]; interest: number[] };
   models: string[];
-  trainedScenario: string | null;
+  availableScenarios: string[];
 }) {
-  const [scenario, setScenario] = useState<Scenario>(trainedScenario === "prelaunch" ? "prelaunch" : "inflight");
+  const prelaunchReady = availableScenarios.includes("prelaunch");
+  const inflightReady = availableScenarios.length === 0 || availableScenarios.includes("inflight");
+  const [scenario, setScenario] = useState<Scenario>(inflightReady || !prelaunchReady ? "inflight" : "prelaunch");
   const [campaign, setCampaign] = useState(String(options.campaign.includes(1178) ? 1178 : options.campaign[0]));
   const [age, setAge] = useState(options.age[0] ?? "30-34");
   const [gender, setGender] = useState(options.gender[0] ?? "male");
@@ -76,6 +76,8 @@ export function WhatIfForm({
 
   const results = run.data;
   const okResults = results?.filter((r): r is Extract<Outcome, { ok: true }> => r.ok) ?? [];
+  const failed = results?.filter((r): r is Extract<Outcome, { ok: false }> => !r.ok) ?? [];
+  const sameFailure = failed.length > 0 && okResults.length === 0 && failed.every((r) => r.message === failed[0].message);
   const main = okResults.find((r) => r.kind === "random_forest") ?? okResults[0];
   const mood = !main ? "thinking" : main.p >= 0.5 ? "happy" : "thinking";
 
@@ -94,18 +96,28 @@ export function WhatIfForm({
             label="Escenario"
             value={scenario}
             onChange={setScenario}
+            fill
             className="w-full"
             options={[
-              { value: "prelaunch", label: "Pre-lanzamiento", title: "Solo atributos de audiencia" },
-              { value: "inflight", label: "En vuelo", title: "Incluye impresiones, clics y gasto" },
+              {
+                value: "prelaunch",
+                label: "Pre-lanzamiento",
+                disabled: !prelaunchReady,
+                title: prelaunchReady ? "Solo audiencia: campaña, edad, género e interés" : "Todavía no hay modelos de pre-lanzamiento",
+              },
+              {
+                value: "inflight",
+                label: "En vuelo",
+                disabled: !inflightReady,
+                title: "Audiencia más impresiones, clics y gasto",
+              },
             ]}
           />
-          {trainedScenario && trainedScenario !== scenario ? (
-            <p className="text-[12px] text-warning-ink">
-              El snapshot solo tiene modelos «{trainedScenario === "inflight" ? "en vuelo" : "pre-lanzamiento"}»; este escenario
-              devolverá error.
-            </p>
-          ) : null}
+          <p className="text-xs text-ink-subtle">
+            {inflight
+              ? "En vuelo sirve para un anuncio que ya se mostró: la estimación usa la audiencia y también impresiones, clics y gasto."
+              : "Pre-lanzamiento sirve antes de publicar: solo mira campaña, edad, género e interés, sin impresiones ni gasto."}
+          </p>
           <Field htmlFor="wi-campaign" label="Campaña">
             <Select id="wi-campaign" value={campaign} onChange={(e) => setCampaign(e.target.value)}>
               {options.campaign.map((c) => (
@@ -204,58 +216,53 @@ export function WhatIfForm({
                     <p className="type-kpi text-ink">{formatPercent(main.p, 1)}</p>
                     <div className="relative mt-3 h-3 rounded-full bg-surface-2">
                       <div className="bar-grow absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${main.p * 100}%` }} />
-                      <div className="absolute top-[-4px] bottom-[-4px] w-px bg-ink-subtle" style={{ left: "50%" }} title="Umbral 0,5" />
+                      <div className="absolute -top-1 -bottom-1 w-px bg-ink-subtle" style={{ left: "50%" }} title="Umbral 0,5" />
                     </div>
                     <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-tertiary tabular">
                       <span>0 %</span>
                       <span>umbral 50 %</span>
                       <span>100 %</span>
                     </div>
-                    <p className="mt-2 text-[12px] text-ink-subtle">Intervalo — · el endpoint devuelve solo la probabilidad puntual.</p>
+                    <p className="mt-2 text-xs text-ink-subtle">La barra es la probabilidad puntual. Por encima de 50 % el modelo se inclina a que convierta.</p>
                   </div>
                 </div>
               ) : null}
               <div className="px-5 pt-4 pb-5">
                 <h3 className="label-mono mb-3 text-ink-tertiary">Comparación entre modelos</h3>
-                <ul className="space-y-3">
-                  {results.map((r) => (
-                    <li key={r.kind} className="grid grid-cols-[120px_1fr_64px] items-center gap-3 text-[13px]">
-                      <span className={cn("truncate", r.kind === main?.kind ? "text-ink" : "text-ink-muted")}>
-                        {MODEL_LABEL[r.kind] ?? r.kind}
-                      </span>
-                      {r.ok ? (
-                        <>
-                          <span className="relative h-5 rounded-sm bg-surface-2">
-                            <span
-                              className="bar-grow absolute inset-y-0 left-0 rounded-sm"
-                              style={{
-                                width: `${r.p * 100}%`,
-                                background: r.kind === main?.kind ? "var(--primary)" : "var(--hairline-tertiary)",
-                              }}
-                            />
-                            <span className="absolute inset-y-0 w-px bg-ink-subtle" style={{ left: "50%" }} />
-                          </span>
-                          <span className="text-right font-mono text-ink tabular">{formatPercent(r.p, 1)}</span>
-                        </>
-                      ) : (
-                        <span className="col-span-2 text-[12px] text-danger-ink">{r.message}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                {sameFailure ? (
+                  <p className="text-[13px] text-danger-ink">{failed[0].message}</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {results.map((r) => (
+                      <li key={r.kind} className="grid grid-cols-[140px_1fr_64px] items-center gap-3 text-[13px]">
+                        <span className={cn("truncate", r.kind === main?.kind ? "text-ink" : "text-ink-muted")}>
+                          {MODEL_LABEL[r.kind] ?? r.kind}
+                        </span>
+                        {r.ok ? (
+                          <>
+                            <span className="relative h-5 rounded-sm bg-surface-2">
+                              <span
+                                className="bar-grow absolute inset-y-0 left-0 rounded-sm"
+                                style={{
+                                  width: `${r.p * 100}%`,
+                                  background: r.kind === main?.kind ? "var(--primary)" : "var(--hairline-tertiary)",
+                                }}
+                              />
+                              <span className="absolute inset-y-0 w-px bg-ink-subtle" style={{ left: "50%" }} />
+                            </span>
+                            <span className="text-right font-mono text-ink tabular">{formatPercent(r.p, 1)}</span>
+                          </>
+                        ) : (
+                          <span className="col-span-2 text-xs text-danger-ink">{r.message}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </Panel>
-            <Notice>
-              Shapley local (los 3 factores que más empujan la probabilidad) y la comparación con el promedio del segmento aún
-              no están expuestos en <code className="font-mono">/v1/predict</code>.
-            </Notice>
           </>
         )}
-        <div className="flex items-center gap-2 text-[12px] text-ink-tertiary">
-          <span aria-hidden className="size-2 rounded-full" style={{ background: campaignColor(campaign) }} />
-          Variables del escenario «{inflight ? "en vuelo" : "pre-lanzamiento"}»: campaña, edad, género, interés
-          {inflight ? ", impresiones, clics y gasto" : ""}. Total_Conversion nunca se usa.
-        </div>
       </div>
     </div>
   );

@@ -23,24 +23,27 @@ export function BarList({
   max: maxProp,
   className,
   labelWidth = "w-28",
+  size = "md",
 }: {
   items: BarItem[];
   max?: number;
   className?: string;
   labelWidth?: string;
+  size?: "md" | "lg";
 }) {
   const max = maxProp ?? (Math.max(...items.map((i) => Math.max(i.value, i.high ?? 0)), 0) || 1);
+  const large = size === "lg";
   return (
-    <ul className={cn("space-y-3", className)}>
+    <ul className={cn(large ? "space-y-6" : "space-y-3", className)}>
       {items.map((item) => {
         const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
         return (
           <li key={item.key} className="flex items-center gap-3">
-            <div className={cn("shrink-0 text-[13px] text-ink-muted", labelWidth)}>
+            <div className={cn("shrink-0 text-ink-muted", large ? "text-[15px]" : "text-[13px]", labelWidth)}>
               <div className="truncate">{item.label}</div>
               {item.sub ? <div className="truncate text-[11px] text-ink-tertiary">{item.sub}</div> : null}
             </div>
-            <div className="relative h-6 min-w-0 flex-1">
+            <div className={cn("relative min-w-0 flex-1", large ? "h-10" : "h-6")}>
               <div className="absolute inset-y-0 left-0 w-full rounded-sm bg-surface-2" />
               <div
                 className="bar-grow absolute inset-y-0 left-0 rounded-sm"
@@ -56,7 +59,9 @@ export function BarList({
                 </div>
               ) : null}
             </div>
-            <div className="w-24 shrink-0 text-right font-mono text-[13px] text-ink tabular">{item.display}</div>
+            <div className={cn("w-24 shrink-0 text-right font-mono text-ink tabular", large ? "text-[15px]" : "text-[13px]")}>
+              {item.display}
+            </div>
           </li>
         );
       })}
@@ -98,17 +103,20 @@ export function DivergingBars({
 export function StackedBar({
   segments,
   label,
+  size = "md",
 }: {
   segments: { key: string; value: number; color: string; label: string; display: string }[];
   label: string;
+  size?: "md" | "lg";
 }) {
   const total = segments.reduce((acc, s) => acc + s.value, 0) || 1;
+  const large = size === "lg";
   return (
     <div>
-      <div className="mb-2 flex items-baseline justify-between text-[12px] text-ink-subtle">
+      <div className={cn("mb-2 flex items-baseline justify-between text-ink-subtle", large ? "text-[15px]" : "text-xs")}>
         <span>{label}</span>
       </div>
-      <div className="flex h-7 w-full overflow-hidden rounded-sm bg-surface-2" role="img" aria-label={label}>
+      <div className={cn("flex w-full overflow-hidden rounded-sm bg-surface-2", large ? "h-8" : "h-7")} role="img" aria-label={label}>
         {segments.map((s, i) => (
           <div
             key={s.key}
@@ -118,10 +126,10 @@ export function StackedBar({
           />
         ))}
       </div>
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+      <ul className={cn("mt-2 flex flex-wrap gap-x-4 gap-y-1", large ? "text-sm" : "text-xs")}>
         {segments.map((s) => (
           <li key={s.key} className="inline-flex items-center gap-1.5 text-ink-muted">
-            <span aria-hidden className="size-2 rounded-[2px]" style={{ background: s.color }} />
+            <span aria-hidden className={cn("rounded-xs", large ? "size-2.5" : "size-2")} style={{ background: s.color }} />
             {s.label}
             <span className="font-mono text-ink tabular">{s.display}</span>
           </li>

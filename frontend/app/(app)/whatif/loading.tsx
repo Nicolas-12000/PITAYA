@@ -6,7 +6,7 @@ export default function Loading() {
     <>
       <PageHeaderSkeleton />
       <Busy className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <KpiSkeleton className="h-[520px]" />
+        <KpiSkeleton className="h-130" />
         <ChartSkeleton height={320} />
       </Busy>
     </>

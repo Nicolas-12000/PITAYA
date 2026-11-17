@@ -37,6 +37,8 @@ const COLUMNS: { key: ColKey; label: string; fmt: (v: number) => string; info: s
 
 type FilterKey = "campaign" | "age" | "gender" | "interest";
 
+const PAGE_SIZE = 20;
+
 const segmentId = (s: Segment) => `${s.xyz_campaign_id}|${s.age}|${s.gender}|${s.interest}`;
 
 function fieldOf(s: Segment, key: FilterKey): string {
@@ -54,6 +56,7 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
   const [compact, setCompact] = useState(false);
   const [showCols, setShowCols] = useState(false);
   const [selected, setSelected] = useState<Segment | null>(null);
+  const [page, setPage] = useState(0);
 
   const options = useMemo(() => {
     const uniq = (k: FilterKey) =>
@@ -78,8 +81,12 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
     const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     updated.forEach((v) => next.append(key, v));
     router.replace(`${pathname}${next.size ? `?${next.toString()}` : ""}`, { scroll: false });
+    setPage(0);
   };
-  const clear = () => router.replace(pathname, { scroll: false });
+  const clear = () => {
+    setPage(0);
+    router.replace(pathname, { scroll: false });
+  };
 
   const dir = sort.dir === "asc" ? 1 : -1;
   const rows = segments
@@ -89,6 +96,9 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
     .sort((a, b) => (a.kpis[sort.key] - b.kpis[sort.key]) * dir);
 
   const visible = COLUMNS.filter((c) => !hidden.has(c.key));
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pageRows = rows.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   const exportCsv = () => {
     const header = ["campaign", "age", "gender", "interest", "ads", ...COLUMNS.map((c) => c.key)];
@@ -142,8 +152,13 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
       {/* Toolbar */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <p className="mr-auto text-[13px] text-ink-subtle" aria-live="polite">
-          <span className="font-mono text-ink tabular">{formatInteger(rows.length)}</span> de{" "}
-          <span className="font-mono tabular">{formatInteger(segments.length)}</span> segmentos
+          <span className="font-mono text-ink tabular">{formatInteger(rows.length)}</span> segmentos
+          {rows.length !== segments.length ? (
+            <>
+              {" "}
+              de <span className="font-mono tabular">{formatInteger(segments.length)}</span>
+            </>
+          ) : null}
           {activeCount ? (
             <button type="button" onClick={clear} className="ml-3 inline-flex items-center gap-1 text-primary-text hover:underline">
               <X className="size-3.5" strokeWidth={1.5} /> Limpiar {activeCount} filtro{activeCount > 1 ? "s" : ""}
@@ -169,7 +184,7 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
                         return next;
                       })
                     }
-                    className="accent-[var(--primary)]"
+                    className="accent-primary"
                   />
                   {c.label}
                 </label>
@@ -194,8 +209,8 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
           </EmptyState>
         </div>
       ) : (
-        <div className="max-h-[70vh] overflow-auto rounded-lg border border-hairline bg-surface-1">
-          <table className="w-full min-w-[760px] border-separate border-spacing-0 text-[13px]">
+        <div className="overflow-x-auto rounded-lg border border-hairline bg-surface-1">
+          <table className="w-full min-w-190 border-separate border-spacing-0 text-[13px]">
             <thead className="sticky top-0 z-10 bg-surface-1">
               <tr>
                 <th scope="col" className="sticky left-0 z-10 border-b border-hairline bg-surface-1 px-4 py-2.5 text-left font-medium text-ink-subtle">
@@ -213,9 +228,10 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
                       <button
                         type="button"
                         title={c.info}
-                        onClick={() =>
-                          setSort((s) => ({ key: c.key, dir: s.key === c.key && s.dir === "desc" ? "asc" : "desc" }))
-                        }
+                        onClick={() => {
+                          setPage(0);
+                          setSort((s) => ({ key: c.key, dir: s.key === c.key && s.dir === "desc" ? "asc" : "desc" }));
+                        }}
                         className={cn("inline-flex items-center gap-1 hover:text-ink", active && "text-ink")}
                       >
                         {c.label}
@@ -231,7 +247,7 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
               </tr>
             </thead>
             <tbody>
-              {rows.map((s) => (
+              {pageRows.map((s) => (
                 <tr
                   key={segmentId(s)}
                   onClick={() => setSelected(s)}
@@ -283,6 +299,29 @@ export function SegmentExplorer({ segments, global }: { segments: Segment[]; glo
           </table>
         </div>
       )}
+
+      {rows.length > PAGE_SIZE ? (
+        <div className="mt-3 flex items-center justify-between gap-3 text-[13px]">
+          <p className="text-ink-subtle">
+            <span className="font-mono text-ink tabular">{formatInteger(currentPage * PAGE_SIZE + 1)}</span>
+            –
+            <span className="font-mono text-ink tabular">{formatInteger(Math.min(rows.length, (currentPage + 1) * PAGE_SIZE))}</span>
+            {" de "}
+            <span className="font-mono tabular">{formatInteger(rows.length)}</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+              Anterior
+            </Button>
+            <span className="font-mono text-ink-subtle tabular">
+              {currentPage + 1} / {pageCount}
+            </span>
+            <Button size="sm" variant="ghost" disabled={currentPage >= pageCount - 1} onClick={() => setPage(currentPage + 1)}>
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <SegmentDetail segment={selected} global={global} onClose={() => setSelected(null)} />
     </div>

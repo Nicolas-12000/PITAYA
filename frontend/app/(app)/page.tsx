@@ -21,8 +21,6 @@ import {
 import { genderLabel } from "@/lib/labels";
 import { campaignColor } from "@/lib/palette";
 
-import { IntroFigures } from "./_components/IntroFigures";
-
 export const metadata: Metadata = { title: "Resumen" };
 
 export default function OverviewPage() {
@@ -30,7 +28,7 @@ export default function OverviewPage() {
     <>
       <PageHeader
         title="Resumen"
-        description="Rendimiento global de las campañas de Facebook Ads del snapshot. El ingreso es estimado: conversiones aprobadas × valor por conversión configurado en el backend."
+        description="Rendimiento global de las campañas de Facebook Ads. El ingreso es estimado: conversiones aprobadas × valor por conversión."
       />
       <Suspense fallback={<KpiRowSkeleton />}>
         <KpiRow />
@@ -43,7 +41,6 @@ export default function OverviewPage() {
           <TopSegments />
         </Suspense>
       </div>
-      <IntroFigures />
     </>
   );
 }
@@ -52,7 +49,7 @@ function KpiRowSkeleton() {
   return (
     <Busy className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }, (_, i) => (
-        <KpiSkeleton key={i} className="h-[196px]" />
+        <KpiSkeleton key={i} className="h-49" />
       ))}
     </Busy>
   );
@@ -90,7 +87,7 @@ async function KpiRow() {
         label="ROI estimado"
         value={formatSignedPercent(base?.roi)}
         tone={base ? (base.roi >= 0 ? "positive" : "negative") : undefined}
-        info="(Ingreso estimado − gasto) / gasto, con el valor por conversión aprobada del backend."
+        info="(Ingreso estimado − gasto) / gasto, con el valor por conversión aprobada."
         note={
           roi.ok
             ? `Con ${formatCurrency(roi.data.base_value_per_conversion)} por conversión. Equilibrio en ${formatCurrency(roi.data.break_even_value_per_conversion)}.`
@@ -195,9 +192,9 @@ async function TopSegments() {
                 href={`/campaigns?${qs.toString()}`}
                 className="group grid grid-cols-[20px_1fr_auto] items-center gap-3 rounded-md px-3 py-2.5 hover:bg-surface-2"
               >
-                <span className="font-mono text-[12px] text-ink-tertiary tabular">{i + 1}</span>
+                <span className="font-mono text-xs text-ink-tertiary tabular">{i + 1}</span>
                 <span className="min-w-0">
-                  <span className="flex flex-wrap items-center gap-1.5 text-[14px] text-ink">
+                  <span className="flex flex-wrap items-center gap-1.5 text-sm text-ink">
                     <span className="inline-flex items-center gap-1.5 font-mono">
                       <span aria-hidden className="size-2 rounded-full" style={{ background: campaignColor(s.xyz_campaign_id) }} />
                       {s.xyz_campaign_id}
@@ -209,7 +206,7 @@ async function TopSegments() {
                     <span className="text-ink-tertiary">·</span>
                     interés {s.interest}
                   </span>
-                  <span className="mt-0.5 block text-[12px] text-ink-subtle">
+                  <span className="mt-0.5 block text-xs text-ink-subtle">
                     {formatInteger(s.kpis.approved_conversions)} conversiones · CPA {formatCurrency(s.kpis.cpa)}
                   </span>
                 </span>

@@ -7,7 +7,7 @@ export default function Loading() {
       <PageHeaderSkeleton />
       <Busy className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <KpiSkeleton key={i} className="h-[196px]" />
+          <KpiSkeleton key={i} className="h-49" />
         ))}
       </Busy>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

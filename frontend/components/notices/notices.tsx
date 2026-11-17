@@ -8,7 +8,7 @@ export function SimulatedBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-dashed border-series-4 px-2 py-0.5 text-[12px] leading-5 font-medium text-warning-ink",
+        "inline-flex items-center gap-1.5 rounded-full border border-dashed border-series-4 px-2 py-0.5 text-xs leading-5 font-medium text-warning-ink",
         className,
       )}
       title="Datos simulados: no corresponden a usuarios reales."

@@ -5,7 +5,6 @@ import { useState } from "react";
 
 import { ChartFrame } from "@/components/charts/ChartFrame";
 import { KpiCard } from "@/components/data/KpiCard";
-import { EmptyState } from "@/components/states/states";
 import { Segmented } from "@/components/ui/controls";
 import { Badge, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { MetricKey, ModelManifest } from "@/lib/api/types";
@@ -32,7 +31,22 @@ const TABLE_METRICS: { base: string; label: string; lowerIsBetter?: boolean }[] 
   { base: "brier", label: "Brier", lowerIsBetter: true },
 ];
 
-export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
+function sliceFor(manifest: ModelManifest, scenario: string): ModelManifest {
+  const models = manifest.models_by_scenario?.[scenario];
+  if (!models) return manifest;
+  return {
+    ...manifest,
+    feature_scenario: scenario,
+    models,
+    cv_fold_roc_auc: manifest.cv_fold_roc_auc_by_scenario?.[scenario] ?? manifest.cv_fold_roc_auc,
+    model_comparison: manifest.model_comparison_by_scenario?.[scenario] ?? manifest.model_comparison,
+  };
+}
+
+export function ModelsExplorer({ manifest: source }: { manifest: ModelManifest }) {
+  const scenarios = source.available_scenarios?.length ? source.available_scenarios : [source.feature_scenario];
+  const [scenario, setScenario] = useState(scenarios.includes(source.feature_scenario) ? source.feature_scenario : scenarios[0]);
+  const manifest = sliceFor(source, scenario);
   const kinds = manifest.models.map((m) => m.kind);
   const [kind, setKind] = useState(kinds.includes("random_forest") ? "random_forest" : kinds[0]);
   const [split, setSplit] = useState<Split>("cv");
@@ -61,17 +75,22 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
-          label="Escenario de features"
-          value={manifest.feature_scenario}
-          onChange={() => undefined}
+          label="Escenario"
+          value={scenario}
+          onChange={setScenario}
           options={[
             {
               value: "prelaunch",
               label: "Pre-lanzamiento",
-              disabled: manifest.feature_scenario !== "prelaunch",
-              title: "Este snapshot no incluye modelos pre-lanzamiento",
+              disabled: !scenarios.includes("prelaunch"),
+              title: "Solo audiencia, antes de publicar",
             },
-            { value: "inflight", label: "En vuelo", disabled: manifest.feature_scenario !== "inflight" },
+            {
+              value: "inflight",
+              label: "En vuelo",
+              disabled: !scenarios.includes("inflight"),
+              title: "Audiencia más impresiones, clics y gasto",
+            },
           ]}
         />
         <Segmented
@@ -83,7 +102,7 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
             { value: "test", label: "Prueba" },
           ]}
         />
-        <span className="text-[12px] text-ink-subtle">
+        <span className="text-xs text-ink-subtle">
           Entrenado {formatDateTime(manifest.created_at)} · sklearn {manifest.sklearn_version} · semilla {manifest.random_seed}
         </span>
       </div>
@@ -222,11 +241,11 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
               <div className="px-5 pt-3 pb-5">
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-[12px] text-ink-subtle">Estadístico W</dt>
+                    <dt className="text-xs text-ink-subtle">Estadístico W</dt>
                     <dd className="mt-1 font-mono text-[20px] text-ink tabular">{formatDecimal(wilcoxon.statistic, 1)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[12px] text-ink-subtle">Valor p</dt>
+                    <dt className="text-xs text-ink-subtle">Valor p</dt>
                     <dd className="mt-1 font-mono text-[20px] text-ink tabular">{formatPValue(wilcoxon.p_value)}</dd>
                   </div>
                 </dl>
@@ -245,17 +264,14 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-success-ink" strokeWidth={1.5} aria-hidden />
               <div className="text-[13px] text-ink-muted">
-                <p className="font-medium text-ink">Sin fuga de información</p>
+                <p className="font-medium text-ink">La respuesta no entra en el cálculo</p>
                 <p className="mt-1 text-pretty">
-                  <code className="font-mono text-ink">Total_Conversion</code> no se usa como variable: incluye las
-                  conversiones aprobadas y filtraría la respuesta. El preprocesamiento vive dentro del Pipeline de scikit-learn.
+                  El total de conversiones se queda fuera: ya cuenta las aprobadas y el modelo vería el resultado.
                 </p>
-                <ul className="mt-3 space-y-1 text-[12px] text-ink-subtle">
-                  {Object.entries(manifest.notes).map(([k, v]) => (
-                    <li key={k}>
-                      <span className="font-mono text-ink-tertiary">{k}</span> · {v}
-                    </li>
-                  ))}
+                <ul className="mt-2 space-y-1 text-pretty">
+                  <li>La regresión logística separa con un límite recto.</li>
+                  <li>Vecinos cercanos copia lo que pasó en los 15 anuncios más parecidos.</li>
+                  <li>Random Forest y AdaBoost acercan la probabilidad a la frecuencia real.</li>
                 </ul>
               </div>
             </div>
@@ -270,7 +286,7 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
           actions={<Badge className="font-mono">dataset {shortHash(manifest.dataset_hash)}</Badge>}
         />
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[680px] text-[13px]">
+          <table className="w-full min-w-170 text-[13px]">
             <thead>
               <tr className="border-y border-hairline text-ink-subtle">
                 <th scope="col" className="px-5 py-2.5 text-left font-medium">Modelo</th>
@@ -310,12 +326,6 @@ export function ModelsExplorer({ manifest }: { manifest: ModelManifest }) {
         </div>
       </Panel>
 
-      <Panel>
-        <EmptyState title="Curvas ROC, PR, calibración e importancias" mood="thinking">
-          El manifiesto actual solo publica métricas agregadas. Cuando el backend exponga las curvas y la importancia por
-          permutación en <code className="font-mono">/v1/models</code>, se dibujarán aquí.
-        </EmptyState>
-      </Panel>
     </div>
   );
 }

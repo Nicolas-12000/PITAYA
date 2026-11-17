@@ -30,25 +30,17 @@ export function toUserMessage(error: unknown): string {
   if (!(error instanceof ApiError)) return "Ocurrió un error inesperado. Reintenta.";
   const { status } = error;
   if (status === 0 || status === 502) {
-    return "No pudimos conectar con el backend. Verifica que esté corriendo (make backend-dev) y reintenta.";
+    return "No pudimos conectar con el servicio. Reintenta en unos segundos.";
   }
   if (status === 503) {
-    return "Falta el snapshot de datos o el modelo pedido. Ejecuta make ingest y make train en el backend.";
+    return "Los datos del análisis no están listos. Reintenta en unos segundos.";
   }
   if (status === 422) return "Algunos campos no son válidos. Revisa los valores marcados.";
   if (status === 409) {
     return "Ya existe una recomendación con esta clave y otro contenido. Vuelve a calcular antes de guardar.";
   }
-  if (status === 400) return `El backend rechazó la petición: ${detailText(error.detail)}. Ajusta los parámetros.`;
-  if (status === 404) return "La ruta pedida no existe en el backend. Revisa la versión de la API.";
-  if (status >= 500) return "El backend falló al calcular. Reintenta en unos segundos.";
+  if (status === 400) return "Esos valores no se pueden calcular. Ajusta los parámetros e inténtalo de nuevo.";
+  if (status === 404) return "No encontramos lo que pediste.";
+  if (status >= 500) return "No pudimos calcularlo. Reintenta en unos segundos.";
   return `Error inesperado (HTTP ${status}). Reintenta.`;
-}
-
-function detailText(detail: unknown): string {
-  if (detail && typeof detail === "object" && "detail" in detail) {
-    const value = (detail as { detail: unknown }).detail;
-    return typeof value === "string" ? value : JSON.stringify(value);
-  }
-  return "parámetros no válidos";
 }
