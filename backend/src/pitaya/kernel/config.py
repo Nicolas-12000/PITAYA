@@ -46,7 +46,13 @@ class PitayaSettings(BaseSettings):
     value_per_approved_conversion: float = 50.0
 
     def resolved_snapshot_dir(self) -> Path:
-        return Path(self.snapshot_dir).resolve()
+        path = Path(self.snapshot_dir)
+        if path.is_absolute():
+            return path
+        # "snapshot" is backend/snapshot, whether the process starts in the repo or in backend/.
+        if path == Path("snapshot"):
+            return repository_root() / "backend" / "snapshot"
+        return path.resolve()
 
 
 @lru_cache
