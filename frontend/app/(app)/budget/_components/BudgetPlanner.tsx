@@ -20,6 +20,7 @@ import { CAMPAIGN_IDS, campaignColor } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 
 const CELEBRATED = "pitaya:celebrated";
+const PAGE_SIZE = 12;
 
 function requestKey(req: RecommendRequest): string {
   return `budget:${req.total_budget}:${req.min_share ?? 0}:${req.max_share ?? 1}`;
@@ -49,7 +50,7 @@ export function BudgetPlanner({
   const [budget, setBudget] = useState("1000");
   const [minShare, setMinShare] = useState("0");
   const [maxShare, setMaxShare] = useState("100");
-  const [showAll, setShowAll] = useState(false);
+  const [page, setPage] = useState(0);
   const [celebrate, setCelebrate] = useState(false);
   const [opened, setOpened] = useState<{ key: string; plan: RecommendResponse["plan"]; req: RecommendRequest } | null>(
     null,
@@ -74,6 +75,7 @@ export function BudgetPlanner({
     mutationFn: (req: RecommendRequest) => apiPost<RecommendResponse>("v1/recommendations", req, requestKey(req)),
     onSuccess: (res, req) => {
       setOpened({ key: requestKey(req), plan: res.plan, req });
+      setPage(0);
       toast.success(
         res.created === false
           ? "Mismos parámetros: quedó como la más reciente."
@@ -111,7 +113,7 @@ export function BudgetPlanner({
     setMinShare(sharePercent(item.payload.min_share, "0"));
     setMaxShare(sharePercent(item.payload.max_share, "100"));
     setOpened({ key: item.idempotency_key, plan: item.payload, req });
-    setShowAll(false);
+    setPage(0);
   }
   const suspicious = plan?.allocations.filter((a) => a.shrunk_cvr > 1).length ?? 0;
 
@@ -129,11 +131,16 @@ export function BudgetPlanner({
     : null;
 
   const pending = history.data.items.filter((i) => !i.persisted).length;
-  const allocations = plan ? (showAll ? plan.allocations : plan.allocations.slice(0, 12)) : [];
+  const pageCount = plan ? Math.max(1, Math.ceil(plan.allocations.length / PAGE_SIZE)) : 1;
+  const currentPage = Math.min(page, pageCount - 1);
+  const allocations = plan
+    ? plan.allocations.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+    : [];
+  const peakShare = plan ? Math.max(...plan.allocations.map((a) => a.share_of_budget)) : 1;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[440px_1fr]">
         <Panel className="h-fit p-5 lg:sticky lg:top-16">
           <form
             noValidate
@@ -155,28 +162,29 @@ export function BudgetPlanner({
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 aria-invalid={!!(localErrors.total_budget ?? serverErrors.total_budget)}
+                className="h-12 text-base"
               />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field htmlFor="min_share" label="Mínimo por segmento (%)" error={localErrors.min_share ?? serverErrors.min_share}>
-                <Input
-                  id="min_share"
-                  inputMode="decimal"
-                  value={minShare}
-                  onChange={(e) => setMinShare(e.target.value)}
-                  aria-invalid={!!(localErrors.min_share ?? serverErrors.min_share)}
-                />
-              </Field>
-              <Field htmlFor="max_share" label="Máximo por segmento (%)" error={localErrors.max_share ?? serverErrors.max_share}>
-                <Input
-                  id="max_share"
-                  inputMode="decimal"
-                  value={maxShare}
-                  onChange={(e) => setMaxShare(e.target.value)}
-                  aria-invalid={!!(localErrors.max_share ?? serverErrors.max_share)}
-                />
-              </Field>
-            </div>
+            <Field htmlFor="min_share" label="Mínimo por segmento (%)" error={localErrors.min_share ?? serverErrors.min_share}>
+              <Input
+                id="min_share"
+                inputMode="decimal"
+                value={minShare}
+                onChange={(e) => setMinShare(e.target.value)}
+                aria-invalid={!!(localErrors.min_share ?? serverErrors.min_share)}
+                className="h-12 text-base"
+              />
+            </Field>
+            <Field htmlFor="max_share" label="Máximo por segmento (%)" error={localErrors.max_share ?? serverErrors.max_share}>
+              <Input
+                id="max_share"
+                inputMode="decimal"
+                value={maxShare}
+                onChange={(e) => setMaxShare(e.target.value)}
+                aria-invalid={!!(localErrors.max_share ?? serverErrors.max_share)}
+                className="h-12 text-base"
+              />
+            </Field>
             <div className="flex flex-col gap-2">
               <Button type="submit" variant="primary" disabled={!valid || calc.isPending}>
                 <Calculator strokeWidth={1.5} />
@@ -250,7 +258,14 @@ export function BudgetPlanner({
               <Panel className="overflow-hidden">
                 <PanelHeader title="Detalle por segmento" subtitle="Ordenado por gasto recomendado." />
                 <div className="mt-4 overflow-x-auto">
-                  <table className="w-full min-w-170 text-[13px]">
+                  <table className="w-full table-fixed text-[13px]">
+                    <colgroup>
+                      <col className="w-[30%]" />
+                      <col className="w-[14%]" />
+                      <col />
+                      <col className="w-[12%]" />
+                      <col className="w-[16%]" />
+                    </colgroup>
                     <thead>
                       <tr className="border-y border-hairline text-ink-subtle">
                         <th scope="col" className="px-5 py-2.5 text-left font-medium">Segmento</th>
@@ -274,12 +289,12 @@ export function BudgetPlanner({
                           </th>
                           <td className="px-3 text-right font-mono text-ink tabular">{formatCurrency(a.recommended_spend)}</td>
                           <td className="px-3">
-                            <span className="flex items-center gap-2">
-                              <span className="h-1.5 w-24 rounded-full bg-surface-2">
+                            <span className="flex w-full items-center gap-2">
+                              <span className="h-1.5 min-w-0 flex-1 rounded-full bg-surface-2">
                                 <span
                                   className="bar-grow block h-full rounded-full"
                                   style={{
-                                    width: `${(a.share_of_budget / Math.max(...plan.allocations.map((x) => x.share_of_budget))) * 100}%`,
+                                    width: `${(a.share_of_budget / peakShare) * 100}%`,
                                     background: campaignColor(a.campaign),
                                   }}
                                 />
@@ -296,11 +311,33 @@ export function BudgetPlanner({
                     </tbody>
                   </table>
                 </div>
-                {plan.allocations.length > 12 ? (
-                  <div className="border-t border-hairline px-5 py-3">
-                    <Button size="sm" variant="ghost" onClick={() => setShowAll((v) => !v)}>
-                      {showAll ? "Mostrar menos" : `Mostrar los ${formatInteger(plan.allocations.length)} segmentos`}
-                    </Button>
+                {plan.allocations.length > PAGE_SIZE ? (
+                  <div className="flex items-center justify-between gap-3 border-t border-hairline px-5 py-3 text-[13px]">
+                    <p className="text-ink-subtle">
+                      <span className="font-mono text-ink tabular">{formatInteger(currentPage * PAGE_SIZE + 1)}</span>
+                      –
+                      <span className="font-mono text-ink tabular">
+                        {formatInteger(Math.min(plan.allocations.length, (currentPage + 1) * PAGE_SIZE))}
+                      </span>
+                      {" de "}
+                      <span className="font-mono tabular">{formatInteger(plan.allocations.length)}</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="ghost" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+                        Anterior
+                      </Button>
+                      <span className="font-mono text-ink-subtle tabular">
+                        {currentPage + 1} / {pageCount}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={currentPage >= pageCount - 1}
+                        onClick={() => setPage(currentPage + 1)}
+                      >
+                        Siguiente
+                      </Button>
+                    </div>
                   </div>
                 ) : null}
               </Panel>
