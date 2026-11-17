@@ -12,6 +12,7 @@ import { load } from "@/lib/api/server";
 import type { ChannelsResponse, KpisResponse, RoiResponse, SegmentsResponse } from "@/lib/api/types";
 import {
   formatCurrency,
+  formatDecimal,
   formatInteger,
   formatNumber,
   formatRatio,
@@ -129,8 +130,10 @@ async function CampaignEfficiency() {
   if (!channels.ok) return <ErrorState title="No pudimos cargar la eficiencia" message={channels.message} />;
   const rows = [...channels.data.campaigns].sort((a, b) => a.kpis.cpa - b.kpis.cpa);
   const best = rows[0];
+  const dearest = rows[rows.length - 1];
+  const times = best && dearest && best.kpis.cpa > 0 ? dearest.kpis.cpa / best.kpis.cpa : null;
   return (
-    <Panel className="rounded-xl">
+    <Panel className="flex h-full flex-col rounded-xl">
       <PanelHeader
         eyebrow={<p className="label-mono text-ink-tertiary">Eficiencia por campaña</p>}
         title={best ? `La campaña ${best.xyz_campaign_id} tiene el menor costo por conversión` : "Costo por conversión"}
@@ -141,8 +144,9 @@ async function CampaignEfficiency() {
           </Link>
         }
       />
-      <div className="px-5 pt-5 pb-5">
+      <div className="flex flex-1 flex-col justify-between gap-6 px-5 pt-6 pb-5">
         <BarList
+          size="lg"
           labelWidth="w-24"
           items={rows.map((c) => ({
             key: String(c.xyz_campaign_id),
@@ -153,6 +157,16 @@ async function CampaignEfficiency() {
             color: campaignColor(c.xyz_campaign_id),
           }))}
         />
+        {best && dearest ? (
+          <p className="text-[13px] leading-relaxed text-ink-subtle">
+            Cada barra junta todos los anuncios de esa campaña. La {best.xyz_campaign_id} aprueba a{" "}
+            {formatCurrency(best.kpis.cpa)}
+            {times !== null && times > 1.15
+              ? ` y la ${dearest.xyz_campaign_id} cuesta unas ${formatDecimal(times, 1)} veces más por aprobación.`
+              : "."}{" "}
+            Un costo bajo no alcanza: el ingreso por conversión se mira en ROI.
+          </p>
+        ) : null}
       </div>
     </Panel>
   );
@@ -167,7 +181,7 @@ async function TopSegments() {
     .slice(0, 5);
 
   return (
-    <Panel className="rounded-xl">
+    <Panel className="flex h-full flex-col rounded-xl">
       <PanelHeader
         eyebrow={<p className="label-mono text-ink-tertiary">Segmentos que más rinden</p>}
         title="Top 5 segmentos por ROAS"
@@ -178,7 +192,7 @@ async function TopSegments() {
           </Link>
         }
       />
-      <ol className="mt-3 px-2 pb-3">
+      <ol className="mt-3 flex flex-1 flex-col justify-between px-2 pb-3">
         {top.map((s, i) => {
           const qs = new URLSearchParams({
             campaign: String(s.xyz_campaign_id),
