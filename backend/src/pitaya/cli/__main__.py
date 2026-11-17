@@ -95,10 +95,17 @@ def cmd_train(args: argparse.Namespace) -> int:
         print(f"[train] {scenario.value}")
 
     manifest = trained[FeatureScenario.INFLIGHT.value]
-    manifest["available_scenarios"] = [FeatureScenario.PRELAUNCH.value, FeatureScenario.INFLIGHT.value]
+    manifest["available_scenarios"] = [
+        FeatureScenario.PRELAUNCH.value,
+        FeatureScenario.INFLIGHT.value,
+    ]
     manifest["models_by_scenario"] = {name: item["models"] for name, item in trained.items()}
-    manifest["cv_fold_roc_auc_by_scenario"] = {name: item["cv_fold_roc_auc"] for name, item in trained.items()}
-    manifest["model_comparison_by_scenario"] = {name: item["model_comparison"] for name, item in trained.items()}
+    manifest["cv_fold_roc_auc_by_scenario"] = {
+        name: item["cv_fold_roc_auc"] for name, item in trained.items()
+    }
+    manifest["model_comparison_by_scenario"] = {
+        name: item["model_comparison"] for name, item in trained.items()
+    }
     (snapshot_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     print("[train] OK")
