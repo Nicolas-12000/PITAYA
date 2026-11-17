@@ -17,6 +17,7 @@ from pitaya.modules.catalog.domain import (
     summarize_dataset,
 )
 from pitaya.modules.modeling.api import run_offline_training
+from pitaya.modules.modeling.domain import FeatureScenario
 from pitaya.platform.storage.snapshot import (
     ads_csv_path,
     load_snapshot_dataframe,
@@ -88,11 +89,22 @@ def cmd_train(args: argparse.Namespace) -> int:
     else:
         dataset_hash = "unknown"
 
-    manifest = run_offline_training(df, snapshot_dir, dataset_hash)
+    trained: dict[str, dict[str, object]] = {}
+    for scenario in (FeatureScenario.PRELAUNCH, FeatureScenario.INFLIGHT):
+        trained[scenario.value] = run_offline_training(df, snapshot_dir, dataset_hash, scenario)
+        print(f"[train] {scenario.value}")
+
+    manifest = trained[FeatureScenario.INFLIGHT.value]
+    manifest["available_scenarios"] = [FeatureScenario.PRELAUNCH.value, FeatureScenario.INFLIGHT.value]
+    manifest["models_by_scenario"] = {name: item["models"] for name, item in trained.items()}
+    manifest["cv_fold_roc_auc_by_scenario"] = {name: item["cv_fold_roc_auc"] for name, item in trained.items()}
+    manifest["model_comparison_by_scenario"] = {name: item["model_comparison"] for name, item in trained.items()}
+    (snapshot_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
     print("[train] OK")
     models = manifest.get("models", [])
     trained_count = len(models) if isinstance(models, list) else 0
-    print(f"  models trained: {trained_count}")
+    print(f"  models trained: {trained_count} por escenario")
     print(f"  manifest={snapshot_dir / 'manifest.json'}")
     return 0
 
