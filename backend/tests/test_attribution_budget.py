@@ -11,6 +11,10 @@ def test_shapley_level_a() -> None:
     result = compute_attribution(df, model="shapley")
     assert result["level"] == "A"
     assert len(result["shapley_shares"]) == 4
+    assert abs(sum(result["shapley_shares"].values()) - 1.0) < 1e-6
+    assert max(result["shapley_values"].values()) > 0
+    explained = sum(result["shapley_values"].values())
+    assert abs(explained - result["coalition_check_grand_value"]) < 1e-4
 
 
 def test_synthetic_level_b_labeled() -> None:
