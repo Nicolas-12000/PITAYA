@@ -1,5 +1,7 @@
+import { backendOrigin } from "@/lib/api/origin";
+
 /** Proxy same-origin hacia FastAPI con lista de rutas permitidas (FRONTEND.md §0.4 y §16). */
-const BASE = process.env.BACKEND_URL ?? "http://localhost:8000";
+const BASE = backendOrigin();
 
 const ALLOWED: Record<string, string[]> = {
   "v1/health": ["GET"],

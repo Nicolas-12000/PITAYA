@@ -1,11 +1,12 @@
 import "server-only";
 
 import { ApiError, toUserMessage } from "./errors";
+import { backendOrigin } from "./origin";
 
 /** Resultado que cada widget usa para aislar su propio error. */
 export type Result<T> = { ok: true; data: T } | { ok: false; status: number; message: string };
 
-const BASE = process.env.BACKEND_URL ?? "http://localhost:8000";
+const BASE = backendOrigin();
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
