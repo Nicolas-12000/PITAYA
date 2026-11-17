@@ -22,11 +22,14 @@ def recommend_workflow(
         min_share=min_share,
         max_share=max_share,
     )
-    payload = {"plan": plan, "saved_in_memory": False, "persisted": False}
+    payload = {"plan": plan, "saved_in_memory": False, "persisted": False, "created": False}
     if idempotency_key:
-        record = ctx.recommendations.save(idempotency_key, plan)
+        stored = {**plan, "min_share": min_share, "max_share": max_share}
+        existed = ctx.recommendations.get(idempotency_key) is not None
+        record = ctx.recommendations.save(idempotency_key, stored)
         payload["saved_in_memory"] = True
         payload["persisted"] = record.persisted
+        payload["created"] = not existed
         if not record.persisted:
             ctx.outbox.add({"type": "recommendation", "key": idempotency_key})
     return payload

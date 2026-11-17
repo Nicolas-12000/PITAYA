@@ -3,6 +3,7 @@
 import json
 import sqlite3
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from pitaya.kernel.config import get_settings
@@ -28,6 +29,7 @@ class RecommendationRecord:
     idempotency_key: str
     payload: dict[str, Any]
     persisted: bool
+    updated_at: str = ""
 
 
 class RecommendationRepository:
@@ -52,31 +54,79 @@ class RecommendationRepository:
         if existing and existing.payload != payload:
             raise ValueError("idempotency_key_conflict")
 
-        record = RecommendationRecord(idempotency_key=key, payload=payload, persisted=False)
+        record = RecommendationRecord(
+            idempotency_key=key,
+            payload=payload,
+            persisted=False,
+            updated_at=datetime.now(UTC).isoformat(),
+        )
         settings = get_settings()
 
         if self._mode == ActiveStorageMode.SQLITE:
-            record.persisted = self._save_sqlite(key, payload, settings)
+            record.persisted = self._save_sqlite(record, settings)
         elif self._mode == ActiveStorageMode.POSTGRES:
-            record.persisted = self._save_postgres(key, payload, settings)
+            record.persisted = self._save_postgres(record, settings)
 
         self._memory[key] = record
         return record
 
     def list_all(self) -> list[dict[str, Any]]:
-        return [asdict(v) for v in self._memory.values()]
+        self._hydrate_sqlite()
+        items = [asdict(v) for v in self._memory.values()]
+        items.sort(key=lambda item: item.get("updated_at") or "", reverse=True)
+        return items
 
-    def _save_sqlite(self, key: str, payload: dict[str, Any], settings: Any) -> bool:
+    def _hydrate_sqlite(self) -> None:
+        if self._mode != ActiveStorageMode.SQLITE:
+            return
+        settings = get_settings()
+        path = resolve_sqlite_path(settings.database_url)
+        if not path or not path.exists():
+            return
+        conn = sqlite3.connect(path)
+        try:
+            self._ensure_sqlite(conn)
+            rows = conn.execute(
+                "SELECT idempotency_key, payload, updated_at FROM recommendations"
+            ).fetchall()
+        except sqlite3.OperationalError:
+            return
+        finally:
+            conn.close()
+        for key, raw, updated_at in rows:
+            if key not in self._memory:
+                self._memory[key] = RecommendationRecord(
+                    idempotency_key=key,
+                    payload=json.loads(raw),
+                    persisted=True,
+                    updated_at=updated_at or "",
+                )
+
+    def _ensure_sqlite(self, conn: sqlite3.Connection) -> None:
+        conn.execute(_SQLITE_CREATE)
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(recommendations)")}
+        if "updated_at" not in columns:
+            conn.execute(
+                "ALTER TABLE recommendations ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''"
+            )
+
+    def _save_sqlite(self, record: RecommendationRecord, settings: Any) -> bool:
         path = resolve_sqlite_path(settings.database_url)
         if not path:
             return False
         path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(path)
         try:
-            conn.execute(_SQLITE_CREATE)
+            self._ensure_sqlite(conn)
             conn.execute(
-                "INSERT OR REPLACE INTO recommendations VALUES (?, ?)",
-                (key, json.dumps(payload)),
+                """
+                INSERT INTO recommendations (idempotency_key, payload, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(idempotency_key) DO UPDATE SET
+                  payload = excluded.payload,
+                  updated_at = excluded.updated_at
+                """,
+                (record.idempotency_key, json.dumps(record.payload), record.updated_at),
             )
             conn.commit()
             return True
@@ -89,8 +139,9 @@ class RecommendationRepository:
             return None
         conn = sqlite3.connect(path)
         try:
+            self._ensure_sqlite(conn)
             row = conn.execute(
-                "SELECT payload FROM recommendations WHERE idempotency_key = ?",
+                "SELECT payload, updated_at FROM recommendations WHERE idempotency_key = ?",
                 (key,),
             ).fetchone()
             if not row:
@@ -99,11 +150,12 @@ class RecommendationRepository:
                 idempotency_key=key,
                 payload=json.loads(row[0]),
                 persisted=True,
+                updated_at=row[1] or "",
             )
         finally:
             conn.close()
 
-    def _save_postgres(self, key: str, payload: dict[str, Any], settings: Any) -> bool:
+    def _save_postgres(self, record: RecommendationRecord, settings: Any) -> bool:
         conn = self._postgres_connect(settings)
         if conn is None:
             return False
@@ -111,12 +163,18 @@ class RecommendationRepository:
             with conn.cursor() as cur:
                 cur.execute(_POSTGRES_CREATE)
                 cur.execute(
+                    "ALTER TABLE recommendations "
+                    "ADD COLUMN IF NOT EXISTS updated_at TEXT NOT NULL DEFAULT ''"
+                )
+                cur.execute(
                     """
-                    INSERT INTO recommendations (idempotency_key, payload)
-                    VALUES (%s, %s::jsonb)
-                    ON CONFLICT (idempotency_key) DO UPDATE SET payload = EXCLUDED.payload
+                    INSERT INTO recommendations (idempotency_key, payload, updated_at)
+                    VALUES (%s, %s::jsonb, %s)
+                    ON CONFLICT (idempotency_key) DO UPDATE SET
+                      payload = EXCLUDED.payload,
+                      updated_at = EXCLUDED.updated_at
                     """,
-                    (key, json.dumps(payload)),
+                    (record.idempotency_key, json.dumps(record.payload), record.updated_at),
                 )
             conn.commit()
             return True

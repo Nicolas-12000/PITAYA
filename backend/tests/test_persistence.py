@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,18 @@ import pytest
 from pitaya.kernel.config import get_settings
 from pitaya.platform.persistence.recommendations import RecommendationRepository
 from pitaya.platform.sync.outbox import Outbox
+
+
+def test_same_payload_updates_recency_without_duplicating() -> None:
+    repo = RecommendationRepository()
+    first = repo.save("k1", {"a": 1})
+    time.sleep(0.002)
+    second = repo.save("k1", {"a": 1})
+    time.sleep(0.002)
+    repo.save("k2", {"a": 2})
+    assert second.updated_at >= first.updated_at
+    listed = repo.list_all()
+    assert [item["idempotency_key"] for item in listed] == ["k2", "k1"]
 
 
 def test_idempotency_conflict_raises() -> None:
