@@ -4,7 +4,7 @@ Norte: una herramienta de análisis que se sienta hecha a mano: calma, densa, le
 
 ## 0. Contrato con el backend (implementado)
 
-Complementa la [guía técnica](../PITAYA.MD) y el [AGENTS.md](../AGENTS.md) del repositorio. **Fuente de verdad de rutas:** prefijo `/v1` en FastAPI (`backend/src/pitaya/platform/web/routes.py`). OpenAPI en `http://localhost:8000/docs` con `make backend-dev`.
+Complementa el [README](../README.md) y el [AGENTS.md](../AGENTS.md) del repositorio. **Fuente de verdad de rutas:** prefijo `/v1` en FastAPI (`backend/src/pitaya/platform/web/routes.py`). OpenAPI en `http://localhost:8000/docs` con `make backend-dev`.
 
 ### 0.1 Endpoints disponibles
 

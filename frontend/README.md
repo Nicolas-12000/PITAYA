@@ -30,7 +30,7 @@ Con el backend en marcha (`make backend-dev` en la raíz) y el snapshot generado
 | `/models` | `models` | Métricas CV/prueba, ROC-AUC por fold, Wilcoxon RF vs AdaBoost, nota de fuga |
 | `/whatif` | `predict` | Probabilidad de convertir comparando los 5 modelos |
 | `/ab` | `ab-test` | Veredicto con Holm, posteriores bayesianas, bootstrap del CPA, tamaño de muestra |
-| `/attribution` | `attribution?model=` | Shapley real (nivel A) y 6 modelos multi-touch simulados (nivel B) |
+| `/attribution` | `attribution`, `channels/compare` | Shapley por campaña, edad, género e interés, y el reparto medido de cada campaña |
 | `/budget` | `recommendations` (GET/POST) | Reparto actual vs recomendado, guardado con `Idempotency-Key`, historial |
 | `/status` | `status`, `health`, `models`, `admin/sync` | Persistencia, hashes, sondeo cada 15 s, sincronización, niveles L1–L3 |
 

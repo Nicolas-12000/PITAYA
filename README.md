@@ -1,107 +1,80 @@
 # PITAYA
 
-**P**redictive **I**nvestment, **T**esting & **A**ttribution for **Y**ield **A**nalytics — analítica de punta a punta sobre campañas de Facebook Ads.
+**P**redictive **I**nvestment, **T**esting & **A**ttribution for **Y**ield **A**nalytics. Analítica de campañas de Facebook Ads: qué convierte, cuánto retorna, qué diferencia es relevante y cómo repartir el siguiente presupuesto.
 
-- Guía maestra: [PITAYA.MD](./PITAYA.MD)
-- Reglas para agentes/IA: [AGENTS.md](./AGENTS.md)
-- Metodología de datos: [docs/crisp-dm/README.md](./docs/crisp-dm/README.md)
+El navegador no recalcula nada. Next.js presenta; FastAPI responde en `/v1`. El dataset y los modelos viajan con el repositorio. El entrenamiento es offline (`make train`) y no ocurre durante una petición.
 
-## Estado
-
-| Área | Estado |
-|------|--------|
-| Backend: API `/v1`, dominio, snapshot, `make ingest` / `train`, CI (ruff, mypy, pytest ≥80 %) | **Listo** |
-| Frontend: dashboard y 10 pantallas analíticas (Next.js 16, Tailwind v4, Recharts) | **Listo** — ver [frontend/README.md](./frontend/README.md) y [frontend/FRONTEND.md](./frontend/FRONTEND.md) |
-
-Lo demás (deploy Vercel, PostgreSQL en producción, EDA en notebook) es opcional y no bloquea desarrollo local.
+## Stack
 
 | Capa | Tecnología |
 |------|------------|
+| Interfaz | Next.js 16, React 19, Tailwind CSS v4, Recharts |
 | API | FastAPI, Pydantic, OpenAPI |
-| Datos / ML | pandas, scikit-learn, scipy |
-| Entorno | Python 3.12, [uv](https://docs.astral.sh/uv/) |
+| Datos y modelos | pandas, scikit-learn, scipy |
+| Entorno | Python 3.12 con [uv](https://docs.astral.sh/uv/), pnpm en `frontend/` |
+
+Reglas del repo: [AGENTS.md](./AGENTS.md). Metodología: [docs/crisp-dm/README.md](./docs/crisp-dm/README.md). Pantallas: [frontend/README.md](./frontend/README.md).
 
 ## Inicio rápido
 
-No instales paquetes Python en el intérprete global: usa siempre el venv de `backend/` (`uv` lo gestiona).
+Python solo dentro de `backend/.venv`. No uses `pip install` en el intérprete del sistema.
 
 ```bash
-# Repositorio
-git clone <url>
-cd PITAYA
-
-# Backend (entorno aislado en backend/.venv)
 make install
-make env           # crea .env desde .env.example → STORAGE_MODE=sqlite (data/pitaya.db)
-make backend-dev   # también crea .env si falta; sin .env el backend arranca en modo memoria
-# → http://localhost:8000/v1/health
-# → http://localhost:8000/docs
+make env              # .env con SQLite en data/pitaya.db
+make backend-dev      # http://localhost:8000/docs
 
-# Frontend (requiere el backend en :8000)
 cp frontend/.env.example frontend/.env.local
 make frontend-install
-make frontend-dev
-# → http://localhost:3000
+make frontend-dev     # http://localhost:3000
 ```
 
-Variables (copiar `.env.example` → `.env`):
+El snapshot ya está en el repo (`backend/snapshot/ads.csv` y `backend/snapshot/models/`). `make ingest` y `make train` solo hacen falta para regenerarlo.
 
-```bash
-STORAGE_MODE=sqlite
-DATABASE_URL=sqlite:///data/pitaya.db   # recomendaciones durables en data/pitaya.db
-SNAPSHOT_DIR=snapshot
-```
+## Persistencia
 
-**Persistencia:** el frontend solo llama al API. Lecturas = snapshot + caché en RAM del backend; SQL solo para recomendaciones (`Idempotency-Key`). Local: SQLite arriba. Vercel demo: `STORAGE_MODE=memory`. Postgres opcional: `make db-up` + `uv sync --extra postgres` (detalle en `PITAYA.MD` §6).
+Las lecturas salen del snapshot. La base solo guarda recomendaciones.
 
-## Pipeline CRISP-DM (comandos)
+| Modo | Cuándo | Qué dura |
+|------|--------|----------|
+| `sqlite` | Local. Es el `.env` que crea `make env` | El historial queda en `data/pitaya.db` |
+| `memory` | Vercel, plan Hobby | El historial vive mientras la instancia sigue en pie |
+| `postgres` | Opcional: `make db-up` y `uv sync --extra postgres` | Historial compartido |
 
-```bash
-make ingest              # Fase 2–3: validación y snapshot
-make train               # Fase 4–5: entrenamiento offline
-make verify-idempotent   # Reproducibilidad e idempotencia
-```
+En Vercel el disco de la función no conserva un archivo SQLite. Por eso `vercel.json` fija `STORAGE_MODE=memory`.
+
+## Despliegue
+
+Un solo proyecto de Vercel, plan Hobby. `vercel.json` declara dos servicios: Next en `frontend/` y FastAPI en `backend/` (`app.index:app`). `/v1` llega al API y el resto a la interfaz. Si `BACKEND_URL` no está definida, el proxy usa la URL del mismo despliegue.
+
+## Datos y modelos
+
+Dataset de Kaggle (`madislemsalu/facebook-ad-campaign`), validado con `make ingest`. Target: `converted = Approved_Conversion > 0`.
+
+Dos escenarios, ambos entrenados: pre-lanzamiento (campaña, edad, género, interés) y en vuelo (impresiones, clics, gasto y tasas disponibles en ese momento). Modelos: baseline, regresión logística, KNN, Random Forest y AdaBoost. `Total_Conversion` no entra como variable: ya incluye las conversiones aprobadas.
+
+El ROI usa un valor por conversión aprobada que el usuario puede cambiar. La comparación entre campañas es observacional: el dataset no es un experimento aleatorizado ni trae ingresos reales.
 
 ## Estructura
 
 ```
 backend/src/pitaya/
-  kernel/           # tipos, hashing, métricas compartidas
-  modules/          # dominio (catalog, modeling, performance, …)
-  orchestration/    # workflows
-  platform/         # web, storage, cache
-docs/crisp-dm/      # fases y entregables
-frontend/           # Next.js (create-next-app) + FRONTEND.md
-notebooks/          # EDA (fuera del runtime de serving)
+  kernel/          tipos, métricas, configuración
+  modules/         catalog, modeling, performance, experiments, attribution, budget
+  orchestration/   workflows
+  platform/        API, storage, caché, recomendaciones
+backend/snapshot/  ads.csv, manifest y modelos
+frontend/          App Router
+docs/crisp-dm/     fases y entregables
 ```
 
-## Modelado
-
-Target: `converted = Approved_Conversion > 0`.
-
-Modelos previstos en el pipeline offline (ver `make train`):
-
-- `DummyClassifier` (baseline)
-- `LogisticRegression` (modelo lineal para clasificación)
-- `KNeighborsClassifier` (KNN)
-- `RandomForestClassifier` y `AdaBoostClassifier` (requerimiento del curso)
-
-No se usa `Total_Conversion` como feature (evitar data leakage).
-
-API REST documentada en OpenAPI: `http://localhost:8000/docs` (prefijo `/v1`).
-
-## Calidad (backend)
-
-Misma barra en local y en GitHub Actions (`.github/workflows/backend.yml`):
+## Calidad
 
 ```bash
-make install    # uv sync --all-extras
 make lint && make format && make typecheck && make test
 ```
 
-- **ruff** (check + format), **mypy** en `src`, **pytest** con cobertura **≥ 80 %** en el paquete `pitaya` (`backend/pyproject.toml`).
-
-Artefactos de datos (CRISP fases 2–5): CSV en `data/raw/`, informe `backend/snapshot/quality_report.json`, snapshot `ads.csv.gz`, modelos en `backend/snapshot/models/` y `manifest.json` — detalle en [docs/crisp-dm/README.md](./docs/crisp-dm/README.md). Tests usan extracto real en `backend/tests/fixtures/` (ver su README).
+ruff, mypy y pytest con cobertura de al menos 80 % sobre el paquete `pitaya`. La misma barra corre en GitHub Actions.
 
 ## Licencia
 

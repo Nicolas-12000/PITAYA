@@ -4,7 +4,7 @@ Mapa de la metodología **Cross-Industry Standard Process for Data Mining** a ar
 
 | Fase CRISP-DM | Objetivo en PITAYA | Artefactos | Comando / ubicación |
 |---------------|-------------------|------------|---------------------|
-| 1. Business Understanding | ROI, presupuesto, conversión, A/B observacional | `PITAYA.MD` §1, §10 | — |
+| 1. Business Understanding | ROI, presupuesto, conversión, A/B observacional | [README](../../README.md) | — |
 | 2. Data Understanding | Esquema Kaggle, missing, balance de clases | `notebooks/01_eda.ipynb` | `make ingest` |
 | 3. Data Preparation | Normalización, reglas de calidad, target `converted` | `catalog/normalize.py`, `catalog/quality.py`, `snapshot/quality_report.json` | `make ingest` |
 | 4. Modeling | Baselines, logística lineal, KNN, RF, AdaBoost | `modules/modeling/`, `snapshot/models/` | `make train` |
