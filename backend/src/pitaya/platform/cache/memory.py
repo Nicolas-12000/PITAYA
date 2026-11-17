@@ -1,4 +1,5 @@
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -28,3 +29,13 @@ class TtlCache:
     @property
     def size(self) -> int:
         return len(self._store)
+
+
+def remember(cache: TtlCache, key: str, build: Callable[[], Any]) -> Any:
+    """Return a cached value or store the result of build()."""
+    hit = cache.get(key)
+    if hit is not None:
+        return hit
+    value = build()
+    cache.set(key, value)
+    return value

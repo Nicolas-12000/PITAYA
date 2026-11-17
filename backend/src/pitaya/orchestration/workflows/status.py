@@ -32,6 +32,7 @@ def build_status_view(ctx: AppContext) -> dict[str, object]:
         "persistence": {
             "database_configured": bool(settings.database_url),
             "durable_writes": mode.value in ("sqlite", "postgres"),
+            "outbox_pending": len(ctx.outbox.pending),
         },
         "snapshot": {
             "loaded": snap_hash is not None,

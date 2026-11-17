@@ -13,6 +13,7 @@ from pitaya.orchestration.workflows import (
     status,
     sync,
 )
+from pitaya.platform.cache.memory import remember
 from pitaya.platform.web.schemas import (
     AbTestRequest,
     AbTestResponse,
@@ -41,41 +42,47 @@ def get_status(request: Request) -> StatusResponse:
 
 
 @router.get("/kpis", response_model=KpisResponse)
-def get_kpis() -> KpisResponse:
+def get_kpis(request: Request) -> KpisResponse:
     try:
-        return KpisResponse.model_validate(kpis.get_kpis_workflow())
+        payload = remember(request.app.state.ctx.cache, "kpis", kpis.get_kpis_workflow)
+        return KpisResponse.model_validate(payload)
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/roi")
-def get_roi() -> dict[str, object]:
+def get_roi(request: Request) -> dict[str, object]:
     try:
-        return roi.roi_workflow()
+        return remember(request.app.state.ctx.cache, "roi", roi.roi_workflow)
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/models")
-def get_models() -> dict[str, object]:
+def get_models(request: Request) -> dict[str, object]:
     try:
-        return models.models_manifest_workflow()
+        return remember(request.app.state.ctx.cache, "models", models.models_manifest_workflow)
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/segments", response_model=SegmentsResponse)
-def get_segments() -> SegmentsResponse:
+def get_segments(request: Request) -> SegmentsResponse:
     try:
-        return SegmentsResponse.model_validate(segments.get_segments_workflow())
+        payload = remember(request.app.state.ctx.cache, "segments", segments.get_segments_workflow)
+        return SegmentsResponse.model_validate(payload)
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/channels/compare")
-def compare_channels() -> dict[str, object]:
+def compare_channels(request: Request) -> dict[str, object]:
     try:
-        return segments.get_channel_compare_workflow()
+        return remember(
+            request.app.state.ctx.cache,
+            "channels",
+            segments.get_channel_compare_workflow,
+        )
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -101,9 +108,13 @@ def post_ab_test(body: AbTestRequest) -> AbTestResponse:
 
 
 @router.get("/attribution")
-def get_attribution(model: str = "shapley") -> dict[str, object]:
+def get_attribution(request: Request, model: str = "shapley") -> dict[str, object]:
     try:
-        return attribution.attribution_workflow(model)
+        return remember(
+            request.app.state.ctx.cache,
+            f"attribution:{model}",
+            lambda: attribution.attribution_workflow(model),
+        )
     except SnapshotNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except ValueError as exc:
