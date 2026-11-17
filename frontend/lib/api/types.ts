@@ -19,7 +19,7 @@ export type HealthResponse = Schemas["HealthResponse"];
 
 export type StatusResponse = Schemas["StatusResponse"] & {
   storage_mode: string;
-  persistence: { database_configured: boolean; durable_writes: boolean };
+  persistence: { database_configured: boolean; durable_writes: boolean; outbox_pending?: number };
   snapshot: {
     loaded: boolean;
     dataset_hash: string | null;
@@ -90,18 +90,24 @@ export type ModelMetrics = Record<MetricKey, number | null>;
 
 export type ModelEntry = { kind: string; artifact: string; metrics: ModelMetrics };
 
+export type ModelComparison = {
+  random_forest_vs_adaboost_wilcoxon?: { statistic: number; p_value: number };
+};
+
 export type ModelManifest = {
   stage: string;
   created_at: string;
   dataset_hash: string;
   random_seed: number;
   feature_scenario: string;
+  available_scenarios?: string[];
   sklearn_version: string;
   models: ModelEntry[];
+  models_by_scenario?: Record<string, ModelEntry[]>;
   cv_fold_roc_auc: Record<string, number[]>;
-  model_comparison: {
-    random_forest_vs_adaboost_wilcoxon?: { statistic: number; p_value: number };
-  };
+  cv_fold_roc_auc_by_scenario?: Record<string, Record<string, number[]>>;
+  model_comparison: ModelComparison;
+  model_comparison_by_scenario?: Record<string, ModelComparison>;
   notes: Record<string, string>;
 };
 
@@ -117,6 +123,7 @@ export type AttributionShapley = {
   shapley_shares: Record<string, number>;
   grand_total_approved: number;
   coalition_check_grand_value: number;
+  variance_explained?: number;
 };
 
 export type AttributionSynthetic = {
@@ -199,11 +206,23 @@ export type BudgetPlan = {
   expected_revenue: number;
   uncertainty_note: string;
   allocations: Allocation[];
+  min_share?: number;
+  max_share?: number;
 };
 
-export type RecommendResponse = { plan: BudgetPlan; saved_in_memory: boolean; persisted: boolean };
+export type RecommendResponse = {
+  plan: BudgetPlan;
+  saved_in_memory: boolean;
+  persisted: boolean;
+  created?: boolean;
+};
 
-export type RecommendationItem = { idempotency_key: string; payload: BudgetPlan; persisted: boolean };
+export type RecommendationItem = {
+  idempotency_key: string;
+  payload: BudgetPlan;
+  persisted: boolean;
+  updated_at?: string;
+};
 
 export type RecommendationsList = { items: RecommendationItem[] };
 

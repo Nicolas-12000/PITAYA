@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { DivergingBars } from "@/components/charts/BarList";
-import { Notice, SimulatedBadge } from "@/components/notices/notices";
+import { BarList } from "@/components/charts/BarList";
+import { Notice } from "@/components/notices/notices";
 import { Busy, ChartSkeleton } from "@/components/states/Skeleton";
 import { ErrorState } from "@/components/states/states";
-import { Badge, PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
+import { PageHeader, Panel, PanelHeader } from "@/components/ui/primitives";
 import { load } from "@/lib/api/server";
-import type { AttributionShapley, AttributionSynthetic } from "@/lib/api/types";
-import { formatDecimal, formatInteger, formatPercent } from "@/lib/format";
-import { ATTRIBUTION_MODELS, FACTOR_LABEL } from "@/lib/labels";
+import type { AttributionShapley, ChannelsResponse } from "@/lib/api/types";
+import { formatInteger, formatPercent } from "@/lib/format";
+import { FACTOR_LABEL } from "@/lib/labels";
 
-import { SyntheticAttribution } from "./_components/SyntheticAttribution";
+import { CampaignSplit } from "./_components/CampaignSplit";
 
 export const metadata: Metadata = { title: "Atribución" };
 
@@ -20,13 +20,13 @@ export default function AttributionPage() {
     <>
       <PageHeader
         title="Atribución"
-        description="Nivel A reparte las conversiones reales entre los factores del anuncio con valores de Shapley exactos. Nivel B compara modelos multi-touch sobre recorridos simulados."
+        description="Reparte las conversiones del dataset. A la izquierda, cuánto separan campaña, edad, género e interés. A la derecha, qué parte del resultado real aporta cada campaña."
       />
       <div className="grid gap-6 xl:grid-cols-2">
         <Suspense fallback={<Busy><ChartSkeleton height={220} /></Busy>}>
           <LevelA />
         </Suspense>
-        <Suspense fallback={<Busy><ChartSkeleton height={220} className="border-dashed border-series-4" /></Busy>}>
+        <Suspense fallback={<Busy><ChartSkeleton height={220} /></Busy>}>
           <LevelB />
         </Suspense>
       </div>
@@ -43,83 +43,55 @@ async function LevelA() {
   const items = d.factors.map((f) => ({
     key: f,
     label: FACTOR_LABEL[f] ?? f,
-    value: d.shapley_values[f] ?? 0,
-    display: degenerate ? formatDecimal(0, 3) : formatDecimal(d.shapley_values[f], 2),
+    value: degenerate ? 0 : (d.shapley_shares[f] ?? 0),
+    display: formatPercent(degenerate ? 0 : (d.shapley_shares[f] ?? 0), 0),
   }));
 
   return (
-    <Panel className="rounded-xl">
+    <Panel className="flex h-full flex-col rounded-xl">
       <PanelHeader
-        eyebrow={
-          <span className="flex items-center gap-2">
-            <p className="label-mono text-ink-tertiary">Nivel A</p>
-            <Badge tone="success" dot>
-              Datos reales
-            </Badge>
-          </span>
-        }
+        eyebrow={<p className="label-mono text-ink-tertiary">Nivel A</p>}
         title={
           degenerate
-            ? "Shapley no distingue factores con la función de valor actual"
-            : `${[...items].sort((a, b) => b.value - a.value)[0].label} es el factor que más explica las conversiones`
+            ? "Estos factores no separan las conversiones"
+            : `${[...items].sort((a, b) => b.value - a.value)[0].label} es lo que más separa los anuncios que convierten`
         }
-        subtitle={`Contribución de campaña, edad, género e interés a ${formatInteger(d.grand_total_approved)} conversiones aprobadas. Verde suma, coral resta.`}
+        subtitle={`Sobre ${formatInteger(d.grand_total_approved)} conversiones aprobadas. Cada barra es un factor del anuncio, no una campaña.`}
       />
-      <div className="px-5 pt-5 pb-5">
-        <DivergingBars items={items} />
-        <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-hairline pt-4 text-[12px]">
-          <div>
-            <dt className="text-ink-subtle">Total aprobado</dt>
-            <dd className="mt-0.5 font-mono text-[14px] text-ink tabular">{formatInteger(d.grand_total_approved)}</dd>
-          </div>
-          <div>
-            <dt className="text-ink-subtle">Valor de la coalición completa</dt>
-            <dd className="mt-0.5 font-mono text-[14px] text-ink tabular">{formatDecimal(d.coalition_check_grand_value, 1)}</dd>
-          </div>
-        </dl>
-        {degenerate ? (
-          <Notice tone="warning" className="mt-4" title="Resultado degenerado.">
-            Todas las contribuciones son ≈ 0 (máx. |φ| = {maxAbs.toExponential(1)}). La función de valor del backend suma las
-            medias por celda, y esa suma siempre es igual al total sin importar la coalición, por lo que ningún factor aporta.
-            Hace falta una función de valor que mida ajuste (p. ej. varianza explicada) para que Shapley sea informativo.
-          </Notice>
-        ) : (
-          <p className="mt-4 text-[12px] text-ink-tertiary">
-            Participación: {d.factors.map((f) => `${FACTOR_LABEL[f]} ${formatPercent(d.shapley_shares[f], 0)}`).join(" · ")}
+      <div className="flex flex-1 flex-col justify-between gap-8 px-5 pt-6 pb-6">
+        <BarList items={items} size="lg" />
+        <div className="space-y-3 text-[15px] leading-relaxed text-ink-muted text-pretty">
+          <p>
+            {degenerate
+              ? "Campaña, edad, género e interés no cambian el resultado de un anuncio a otro, así que no hay una parte que atribuir."
+              : `La barra más larga es el factor que más cambia el resultado al pasar de un anuncio a otro, descontando lo que ya explican los demás. Juntos separan el ${formatPercent(d.variance_explained ?? 0, 0)} de esa diferencia. El rosa de aquí no es una campaña: solo marca el tamaño.`}
           </p>
-        )}
+          <p>
+            Campaña es a cuál de las tres pertenece el anuncio. Edad es el rango de quien lo vio. Género distingue mujer y
+            hombre. Interés es el tema de Facebook al que se dirigió.
+          </p>
+        </div>
+        {degenerate ? (
+          <Notice tone="warning" className="mt-4" title="Sin diferencias que repartir.">
+            Con estas filas el resultado no cambia al mirar campaña, edad, género o interés.
+          </Notice>
+        ) : null}
       </div>
     </Panel>
   );
 }
 
 async function LevelB() {
-  const results = await Promise.all(
-    ATTRIBUTION_MODELS.map((m) => load<AttributionSynthetic>(`v1/attribution?model=${m.id}`)),
-  );
-  const ok = results.flatMap((r) => (r.ok ? [r.data] : []));
-  if (!ok.length) {
-    const first = results[0];
-    return (
-      <ErrorState
-        title="No pudimos cargar la atribución simulada"
-        message={first && !first.ok ? first.message : "Sin datos"}
-      />
-    );
-  }
+  const res = await load<ChannelsResponse>("v1/channels/compare");
+  if (!res.ok) return <ErrorState title="No pudimos cargar el reparto por campaña" message={res.message} />;
   return (
-    <Panel className="border-dashed border-series-4 rounded-xl">
+    <Panel className="h-full rounded-xl">
       <PanelHeader
-        eyebrow={
-          <span className="flex items-center gap-2">
-            <p className="label-mono text-ink-tertiary">Nivel B</p>
-            <SimulatedBadge />
-          </span>
-        }
-        title="Comparación de modelos multi-touch"
-        subtitle={`${formatInteger(ok[0].journeys)} recorridos sintéticos (semilla ${ok[0].random_seed}). Datos simulados: no corresponden a usuarios reales; sirven para entender cómo reparte crédito cada modelo.`}
+        eyebrow={<p className="label-mono text-ink-tertiary">Nivel B</p>}
+        title="Qué aportó cada campaña"
+        subtitle="Conversiones, clics y gasto medidos en el dataset. No hay recorridos inventados."
       />
-      <SyntheticAttribution results={ok} />
+      <CampaignSplit campaigns={res.data.campaigns} />
     </Panel>
   );
 }
