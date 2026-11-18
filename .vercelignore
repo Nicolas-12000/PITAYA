@@ -1,0 +1,25 @@
+# Archivos locales que no deben subirse con `vercel deploy`
+.env
+.env.*
+!.env.example
+.claude/
+data/
+notebooks/
+docs/
+
+# Python
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.coverage
+htmlcov/
+backend/tests/
+# El snapshot versionado es ads.csv; un .gz local tendría prioridad sobre él
+backend/snapshot/*.gz
+
+# Node / Next.js
+**/node_modules/
+frontend/.next/
+frontend/out/
