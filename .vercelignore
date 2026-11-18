@@ -2,10 +2,11 @@
 .env
 .env.*
 !.env.example
-.claude/
-data/
-notebooks/
-docs/
+# Anclados a la raíz: "data/" sin barra inicial excluiría también frontend/components/data/
+/.claude/
+/data/
+/notebooks/
+/docs/
 
 # Python
 **/.venv/
