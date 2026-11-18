@@ -2,6 +2,8 @@
 
 **P**redictive **I**nvestment, **T**esting & **A**ttribution for **Y**ield **A**nalytics. Analítica de campañas de Facebook Ads: qué convierte, cuánto retorna, qué diferencia es relevante y cómo repartir el siguiente presupuesto.
 
+**Demo en vivo:** https://pitaya-nine.vercel.app · API: [`/v1/health`](https://pitaya-nine.vercel.app/v1/health) · Estado: [`/status`](https://pitaya-nine.vercel.app/status)
+
 El navegador no recalcula nada. Next.js presenta; FastAPI responde en `/v1`. El dataset y los modelos viajan con el repositorio. El entrenamiento es offline (`make train`) y no ocurre durante una petición.
 
 ## Stack
@@ -45,7 +47,18 @@ En Vercel el disco de la función no conserva un archivo SQLite. Por eso `vercel
 
 ## Despliegue
 
-Un solo proyecto de Vercel, plan Hobby. `vercel.json` declara dos servicios: Next en `frontend/` y FastAPI en `backend/` (`app.index:app`). `/v1` llega al API y el resto a la interfaz. Si `BACKEND_URL` no está definida, el proxy usa la URL del mismo despliegue.
+Producción: **https://pitaya-nine.vercel.app** (proyecto `pitaya` en Vercel, plan Hobby, modo `memory`).
+
+Un solo proyecto de Vercel. `vercel.json` declara dos servicios: Next en `frontend/` y FastAPI en `backend/` (`app.index:app`). `/v1` llega al API y el resto a la interfaz. Un *binding* de servicio inyecta `BACKEND_URL` en Next, así las llamadas del servidor al API son internas y no pasan por la protección de despliegues.
+
+Despliegue manual desde la raíz del repo (con sesión en la cuenta dueña del proyecto):
+
+```bash
+npx vercel login
+npx vercel deploy --prod
+```
+
+Despliegue automático en cada push a `main`: ver [docs/deploy/vercel-github.md](./docs/deploy/vercel-github.md).
 
 ## Datos y modelos
 
