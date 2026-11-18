@@ -41,3 +41,4 @@ frontend/.env.local
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
+.vercel
