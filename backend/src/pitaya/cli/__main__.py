@@ -7,9 +7,8 @@ import pandas as pd
 
 from pitaya.cli.download import download_facebook_ads_csv, print_download_help
 from pitaya.kernel.config import get_settings
-from pitaya.kernel.hashing import sha256_file
+from pitaya.kernel.hashing import csv_content_hash
 from pitaya.kernel.paths import raw_dataset_path
-from pitaya.modules.catalog.api import dataset_content_hash
 from pitaya.modules.catalog.domain import (
     EXPECTED_COLUMNS,
     add_conversion_target,
@@ -21,6 +20,7 @@ from pitaya.modules.modeling.domain import FeatureScenario
 from pitaya.platform.storage.snapshot import (
     ads_csv_path,
     load_snapshot_dataframe,
+    snapshot_dataset_hash,
     write_compressed_snapshot,
 )
 
@@ -54,7 +54,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     csv_dest.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(csv_dest, index=False)
     gz_path = write_compressed_snapshot(csv_dest)
-    content_hash = sha256_file(gz_path)
+    content_hash = csv_content_hash(gz_path)
 
     print("[ingest] OK")
     print(
@@ -80,14 +80,8 @@ def cmd_train(args: argparse.Namespace) -> int:
         return 1
 
     df = add_conversion_target(raw)
-    gz = snapshot_dir / "ads.csv.gz"
-    csv = snapshot_dir / "ads.csv"
-    if gz.exists():
-        dataset_hash = sha256_file(gz)
-    elif csv.exists():
-        dataset_hash = dataset_content_hash(csv)
-    else:
-        dataset_hash = "unknown"
+    # Same content hash that /v1/status reports, so the two can be compared.
+    dataset_hash = snapshot_dataset_hash() or "unknown"
 
     trained: dict[str, dict[str, object]] = {}
     for scenario in (FeatureScenario.PRELAUNCH, FeatureScenario.INFLIGHT):
@@ -171,8 +165,8 @@ def cmd_verify_idempotent(_args: argparse.Namespace) -> int:
     if not gz.exists():
         print("[verify_idempotent] No ads.csv.gz — run make ingest first", file=sys.stderr)
         return 1
-    h1 = sha256_file(gz)
-    h2 = sha256_file(gz)
+    h1 = csv_content_hash(gz)
+    h2 = csv_content_hash(gz)
     if h1 != h2:
         print("[verify_idempotent] FAIL hash mismatch", file=sys.stderr)
         return 1

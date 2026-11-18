@@ -1,3 +1,4 @@
+import gzip
 import hashlib
 from pathlib import Path
 
@@ -14,6 +15,20 @@ def sha256_file(path: Path, chunk_size: int = 1 << 20) -> str:
     with path.open("rb") as handle:
         while chunk := handle.read(chunk_size):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def csv_content_hash(path: Path) -> str:
+    """SHA-256 of a CSV's text, plain or gzipped.
+
+    Ignores the gzip header (it stores a timestamp) and normalises line endings,
+    so ads.csv and ads.csv.gz with the same rows hash the same on any OS.
+    """
+    opener = gzip.open if path.suffix == ".gz" else open
+    digest = hashlib.sha256()
+    with opener(path, "rb") as handle:
+        for line in handle:
+            digest.update(line.rstrip(b"\r\n") + b"\n")
     return digest.hexdigest()
 
 

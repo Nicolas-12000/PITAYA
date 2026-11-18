@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from pitaya.kernel.hashing import sha256_file
+from pitaya.kernel.hashing import csv_content_hash
 from pitaya.modules.catalog.domain import DatasetSummary, load_csv, summarize_dataset
 
 
@@ -15,4 +15,4 @@ def dataset_summary(df: pd.DataFrame) -> DatasetSummary:
 
 
 def dataset_content_hash(path: Path) -> str:
-    return sha256_file(path)
+    return csv_content_hash(path)
