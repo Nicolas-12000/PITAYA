@@ -50,8 +50,18 @@ class PitayaSettings(BaseSettings):
         if path.is_absolute():
             return path
         # "snapshot" is backend/snapshot, whether the process starts in the repo or in backend/.
+        # On Vercel the package may be installed outside the source tree, so also look
+        # relative to the working directory (the service root).
         if path == Path("snapshot"):
-            return repository_root() / "backend" / "snapshot"
+            candidates = [
+                repository_root() / "backend" / "snapshot",
+                Path.cwd() / "snapshot",
+                Path.cwd() / "backend" / "snapshot",
+            ]
+            for candidate in candidates:
+                if (candidate / "manifest.json").exists():
+                    return candidate
+            return candidates[0]
         return path.resolve()
 
 
