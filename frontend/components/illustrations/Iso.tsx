@@ -18,8 +18,8 @@ export function IsoBox(props: Box) {
   const { top, left, right } = boxFaces(props);
   return (
     <g fill="none" strokeLinejoin="round" strokeWidth={1}>
-      <polygon points={poly(left)} pathLength={1} className="fill-surface-1 stroke-hairline-strong" vectorEffect="non-scaling-stroke" />
-      <polygon points={poly(right)} pathLength={1} className="fill-surface-1 stroke-hairline-strong" vectorEffect="non-scaling-stroke" />
+      <polygon points={poly(left)} pathLength={1} className="fill-surface-1 stroke-ink-tertiary" vectorEffect="non-scaling-stroke" />
+      <polygon points={poly(right)} pathLength={1} className="fill-surface-1 stroke-ink-tertiary" vectorEffect="non-scaling-stroke" />
       <polygon
         points={poly(top)}
         pathLength={1}

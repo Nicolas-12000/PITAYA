@@ -107,8 +107,10 @@ body {
 @keyframes hop { 40% { transform: translateY(-8%) } 100% { transform: none } }
 
 /* ── Figuras FIG 0.x (§21) ──────────────────────────────────── */
-.fig-draw polygon, .fig-draw path, .fig-draw line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 900ms cubic-bezier(0.2, 0, 0, 1) forwards; }
-@keyframes draw { to { stroke-dashoffset: 0 } }
+/* El trazo en reposo queda completo (offset 0); la animación parte de 1 con fill
+   "backwards". Si la animación no se ejecuta, la figura se sigue viendo. */
+.fig-draw polygon, .fig-draw path, .fig-draw line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 900ms cubic-bezier(0.2, 0, 0, 1) backwards; }
+@keyframes draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
 
 /* Barras que crecen al montar */
 .bar-grow { transform-origin: left center; animation: grow 320ms cubic-bezier(0.2, 0, 0, 1) both; }

@@ -22,6 +22,8 @@ import {
 import { genderLabel } from "@/lib/labels";
 import { campaignColor } from "@/lib/palette";
 
+import { IntroFigures } from "./_components/IntroFigures";
+
 export const metadata: Metadata = { title: "Resumen" };
 
 export default function OverviewPage() {
@@ -42,6 +44,7 @@ export default function OverviewPage() {
           <TopSegments />
         </Suspense>
       </div>
+      <IntroFigures />
     </>
   );
 }
